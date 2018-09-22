@@ -11,7 +11,7 @@ def generate_index_table(app):
         full = os.path.join(app['PATH-DB'], major_id)
         if not os.path.isdir(full):
             continue
-        tbl += '<a href="' + major_id + '">' + major_id + '</a>'
+        tbl += '<a href="id/' + major_id + '">' + major_id + '</a>'
     return tbl
 
 def generate_index(app):

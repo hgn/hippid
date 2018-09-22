@@ -22,7 +22,7 @@ def save_meta_data_existing(obj, major_path):
     pass
 
 
-def save_meta_data_new(obj, major_path):
+def save_meta_data(obj, major_path):
     """ meta-own.json and meta-foreign.json """
     path = os.path.join(major_path, '.meta-own.json')
     d = dict()
@@ -46,9 +46,32 @@ def save_meta_data_new(obj, major_path):
         fd.write(dj)
 
 
+def update_meta_data(obj, major_path):
+    """ meta-own.json and meta-foreign.json """
+    path = os.path.join(major_path, '.meta-own.json')
+    with open(path) as f:
+        d = json.load(f)
+    now = timestr()
+    d['time-last'] = now
+    submitter = dict()
+    submitter['name'] = obj['submitter']
+    d['submitters'].append(submitter)
+    dj = json.dumps(d, sort_keys=True, separators=(',', ': '))
+    with open(path, 'w') as fd:
+        fd.write(dj)
+
+    path = os.path.join(major_path, '.meta-foreign.json')
+    d = dict()
+    # FIXME: check key existins
+    d['lifetime-group'] = obj['meta']['lifetime-group']
+    dj = json.dumps(d, sort_keys=True, separators=(',', ': '))
+    with open(path, 'w') as fd:
+        fd.write(dj)
+
+
 def process_major_new(request, obj, major_path):
     os.makedirs(major_path, exist_ok=True)
-    save_meta_data_new(obj, major_path)
+    save_meta_data(obj, major_path)
     for major in obj['majors']:
         path = os.path.join(major_path, major['name'])
         content = major['content']
@@ -59,6 +82,13 @@ def process_major_new(request, obj, major_path):
 
 
 def process_major_existing(request, obj, major_path):
+    update_meta_data(obj, major_path)
+    for major in obj['majors']:
+        path = os.path.join(major_path, major['name'])
+        content = major['content']
+        with open(path, 'w') as fd:
+            fd.write(content)
+    request.app['QUEUE'].put_nowait(["MAJOR", obj['major-id']])
     return aiohttp.web.Response(text="All right!")
 
 
