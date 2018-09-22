@@ -6,6 +6,7 @@ import os
 import datetime
 import time
 import sys
+import base64
 
 import aiohttp
 
@@ -75,7 +76,12 @@ def process_major_new(request, obj, major_path):
     for major in obj['majors']:
         path = os.path.join(major_path, major['name'])
         content = major['content']
-        with open(path, 'w') as fd:
+        mode = 'w'
+        if 'base64-encoded' in major:
+            content = base64.b64decode(content)
+            mode = 'wb'
+        print(path)
+        with open(path, mode) as fd:
             fd.write(content)
     request.app['QUEUE'].put_nowait(["MAJOR", obj['major-id']])
     return aiohttp.web.Response(text="All right!")

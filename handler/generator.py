@@ -1,6 +1,7 @@
 import os
 import time
 import markdown
+import shutil
 
 extensions = ['markdown.extensions.tables']
 
@@ -11,7 +12,7 @@ def generate_index_table(app):
         full = os.path.join(app['PATH-DB'], major_id)
         if not os.path.isdir(full):
             continue
-        tbl += '<a href="id/' + major_id + '">' + major_id + '</a>'
+        tbl += '<a href="id/' + major_id + '/">' + major_id + '</a>'
     return tbl
 
 def generate_index(app):
@@ -29,16 +30,25 @@ def process_md(app, major_id, md_name, path, full):
     html = markdown.markdown(cnt, extensions=extensions)
     return html
 
+def process_remain(app, major_id, filename_name, path, full, index_path):
+    """ simple copy the rest """
+    dst = os.path.join(index_path, filename_name)
+    shutil.copyfile(full, dst)
+
 def generate_major_page(app, major_id, path):
+    index_path = os.path.join(app['PATH-GENERATE'], major_id)
+    os.makedirs(index_path, exist_ok=True)
     index = app['BLOB-HEADER']
     for filename in sorted(os.listdir(path)):
         full = os.path.join(path, filename)
         if filename.endswith('.md'):
             index += process_md(app, major_id, filename, path, full)
+        elif filename.startswith('.'):
+            # meta files are ignored
+            continue
+        else:
+            process_remain(app, major_id, filename, path, full, index_path)
     index += app['BLOB-FOOTER']
-
-    index_path = os.path.join(app['PATH-GENERATE'], major_id)
-    os.makedirs(index_path, exist_ok=True)
     index_file_path = os.path.join(index_path, 'index.html')
     with open(index_file_path, 'w') as fd:
         fd.write(index)
