@@ -15,18 +15,16 @@ import glob
 
 from aiohttp import web
 
-from httpd.utils import log
 from handler import api_ping
+from handler import entity
+from handler import major
 from handler import generator
-
-
 
 try:
     import pympler.summary
     import pympler.muppy
 except:
     pympler = None
-
 
 
 APP_VERSION = "001"
@@ -47,7 +45,7 @@ def init_aiohttp(conf):
     loop = asyncio.get_event_loop()
     app = web.Application(loop=loop)
     app["CONF"] = conf
-    app['QUEUE'] = asyncio.Queue(maxsize=1)
+    app['QUEUE'] = asyncio.Queue(maxsize=64)
     app['LOOP'] = loop
     return app
 
@@ -66,28 +64,25 @@ async def handle_utilization(request):
         return web.Response(body=content, content_type='text/html')
 
 async def handle_index(request):
-    # redirect -> raise web.HTTPFound('journal')
-    root = request.app['path-root']
-    full = os.path.join(request.app["CONF"]['page_dir'], 'index.html')
-    if not os.path.isfile(full):
+    path = os.path.join(request.app['PATH-GENERATE'], 'index.html')
+    if not os.path.isfile(path):
         return web.Response(text="NO DATA YET - SRY")
-    with open(full, 'r') as content_file:
+    with open(path, 'r') as content_file:
         content = str.encode(content_file.read())
         return web.Response(body=content, content_type='text/html')
 
 def setup_routes(app, conf):
-    app.router.add_route('GET', '/api/v1/ping', api_ping.handle)
-
-    path_assets = os.path.join(app['path-root'], "httpd/assets")
-    app.router.add_static('/assets', path_assets, show_index=False)
-
+    app.router.add_route('*', '/api/v1/ping', api_ping.handle)
+    app.router.add_route('*', '/api/v1/entity', entity.handle)
+    app.router.add_route('*', '/id/{major_id}', major.handle)
+    path_assets = os.path.join(app['PATH-TEMPLATES'], 'assets')
+    app.router.add_static('/assets/', path_assets, show_index=True)
     app.router.add_get('/', handle_index)
 
 
 def timeout_daily_midnight(app):
-    log.debug("Execute daily execution handler")
     try:
-        app['QUEUE'].put_nowait("328923923")
+        app['QUEUE'].put_nowait(None)
     except:
         print("the generator was already informed, ignore it, no need to regenerate")
         pass
@@ -107,7 +102,6 @@ def register_timeout_handler_daily(app):
     midnight_sec = seconds_to_midnight()
     call_time = loop.time() + midnight_sec
     msg = "Register daily timeout [scheduled in {} seconds]".format(midnight_sec)
-    log.debug(msg)
     loop.call_at(call_time, register_timeout_handler_daily, app)
     timeout_daily_midnight(app)
 
@@ -115,7 +109,7 @@ def register_timeout_handler_daily(app):
 def register_timeout_handler(app):
     register_timeout_handler_daily(app)
 
-def setup_db(app):
+def setup_path(app):
     app['path-root'] = os.path.dirname(os.path.realpath(__file__))
 
 async def recuring_memory_output(conf):
@@ -127,9 +121,8 @@ async def recuring_memory_output(conf):
 
 
 def init_debug_memory(conf):
-    log.err("initialize memory debugging")
     if not pympler:
-        log.err("pympler not installed, memory_debug not possible")
+        print("pympler not installed, memory_debug not possible")
         return
     asyncio.ensure_future(recuring_memory_output(conf))
 
@@ -139,25 +132,47 @@ def init_debug(conf):
         init_debug_memory(conf)
 
 def setup_page_dir(app):
-    if not 'page_dir' in app["CONF"]:
-        app["CONF"]['page_dir'] = tempfile.mkdtemp()
-    directory = app["CONF"]['page_dir']
-    if not directory.startswith('/'):
-        directory = os.path.join(app['path-root'], directory)
-        app["CONF"]['page_dir'] = directory
-    if os.path.exists(directory):
-        print("remove page dir: {}".format(directory))
-        shutil.rmtree(directory)
-    os.makedirs(directory, exist_ok=True)
+    if not 'generate_path' in app["CONF"]:
+        app['PATH-GENERATE'] = app["CONF"]['generate_path']
+    else:
+        app['PATH-GENERATE'] = tempfile.mkdtemp()
+    if not app['PATH-GENERATE'].startswith('/'):
+        app['PATH-GENERATE'] = os.path.join(app['path-root'], app['PATH-GENERATE'])
+    if os.path.exists(app['PATH-GENERATE']):
+        print("remove generate_path first: {}".format(app['PATH-GENERATE']))
+        shutil.rmtree(app['PATH-GENERATE'])
+    os.makedirs(app['PATH-GENERATE'], exist_ok=True)
+
+def setup_db(app):
+    if not 'db_path' in app["CONF"]:
+        app['PATH-DB'] = tempfile.mkdtemp()
+    else:
+        app['PATH-DB'] = app["CONF"]['db_path']
+    print('DB path: {}'.format(app['PATH-DB']))
+    os.makedirs(app['PATH-DB'], exist_ok=True)
+
 
 def setup_template_files(app):
     if not 'template_dir' in app["CONF"]:
-        return
-    directory = app["CONF"]['template_dir']
-    if not os.path.exists(directory):
-        return
-    for filename in glob.glob(os.path.join(directory, '*.*')):
-        shutil.copy(filename, app["CONF"]['page_dir'])
+        app['PATH-TEMPLATES'] = os.path.join(app['path-root'], "templates")
+    else:
+        app['PATH-TEMPLATES'] = app["CONF"]['template_dir']
+    if not os.path.exists(app['PATH-TEMPLATES']):
+        raise('templates_dir does not exists, check your config')
+    # read header and footer
+    full = os.path.join(app['PATH-TEMPLATES'], 'header.html')
+    with open(full, 'r') as fd:
+        app['BLOB-HEADER'] = fd.read()
+    full = os.path.join(app['PATH-TEMPLATES'], 'footer.html')
+    with open(full, 'r') as fd:
+        app['BLOB-FOOTER'] = fd.read()
+    # now copy assets recursively
+    src = os.path.join(app['PATH-TEMPLATES'], 'assets')
+    dst = app['PATH-GENERATE'] + '/assets'
+    shutil.copytree(src, dst)
+
+    #for filename in glob.glob(os.path.join(directory, '*.*')):
+    #    shutil.copy(filename, app["CONF"]['page_dir'])
 
 def setup_generator(app):
     app['LOOP'].create_task(generator.generator(app))
@@ -165,9 +180,10 @@ def setup_generator(app):
 def main(conf):
     init_debug(conf)
     app = init_aiohttp(conf)
-    setup_db(app)
+    setup_path(app)
     setup_page_dir(app)
     setup_template_files(app)
+    setup_db(app)
     setup_routes(app, conf)
     register_timeout_handler(app)
     setup_generator(app)
@@ -204,27 +220,12 @@ def configuration_check(conf):
         sys.exit(EXIT_FAILURE)
 
 
-def init_logging(conf):
-    return
-    log_level_conf = "warning"
-    if conf.common.logging:
-        log_level_conf = conf.common.logging
-    numeric_level = getattr(logging, log_level_conf.upper(), None)
-    if not isinstance(numeric_level, int):
-        raise ValueError('Invalid log level: {}'.format(numeric_level))
-    logging.basicConfig(level=numeric_level, format='%(message)s')
-    log.error("Log level configuration: {}".format(log_level_conf))
-
-
 def conf_init():
     args = parse_args()
     conf = load_configuration_file(args)
-    init_logging(conf)
     return conf
-
 
 if __name__ == '__main__':
     info_str = sys.version.replace('\n', ' ')
-    log.warning("Starting HIPID (python: {})".format(info_str))
     conf = conf_init()
     main(conf)
