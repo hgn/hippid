@@ -17,8 +17,9 @@ from aiohttp import web
 
 from handler import api_ping
 from handler import entity
-from handler import major
 from handler import generator
+from handler import major
+from handler import minor
 
 try:
     import pympler.summary
@@ -74,9 +75,10 @@ async def handle_index(request):
 def setup_routes(app, conf):
     app.router.add_route('*', '/api/v1/ping', api_ping.handle)
     app.router.add_route('*', '/api/v1/entity', entity.handle)
-    app.router.add_route('*', '/id/{major_id}', major.handle)
     path_assets = os.path.join(app['PATH-TEMPLATES'], 'assets')
     app.router.add_static('/assets/', path_assets, show_index=True)
+    app.router.add_route('*', '/{major_id}', major.handle)
+    app.router.add_route('*', '/{major_id}/{minor}', minor.handle)
     app.router.add_get('/', handle_index)
 
 
