@@ -60,4 +60,4 @@
 > the data-model the hierachy is modeled by slashes. Thus `/` is not an
 > ordinary identifer. All other child identifiers are allowed. To reference a
 > deeply nested child element the particular entry-name must be constructed with
-> slashes too. E.g. `00110/010.md`. 
+> slashes too. E.g. `00110/010.md`.
