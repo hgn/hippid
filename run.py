@@ -16,7 +16,7 @@ import glob
 from aiohttp import web
 
 from handler import api_ping
-from handler import entity
+from handler import upload
 from handler import generator
 from handler import major
 from handler import minor
@@ -74,7 +74,7 @@ async def handle_index(request):
 
 def setup_routes(app, conf):
     app.router.add_route('*', '/api/v1/ping', api_ping.handle)
-    app.router.add_route('*', '/api/v1/entity', entity.handle)
+    app.router.add_route('*', '/api/v1/upload', upload.handle)
     path_assets = os.path.join(app['PATH-TEMPLATES'], 'assets')
     app.router.add_static('/assets/', path_assets, show_index=True)
     app.router.add_route('*', '/id/{major_id}/', major.handle)
