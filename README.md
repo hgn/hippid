@@ -25,10 +25,12 @@
 }
 ```
 
+One simple rule: data are files, always. The only exceptions are meta-data
+files. These have a special meaning.
+
 ```
 {
-	'major-id' : <id>
-	'type' : 'minor'
+	'id' : <id>
 	'submitter' : <string>
 	
 	'data' : [

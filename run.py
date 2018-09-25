@@ -77,10 +77,8 @@ def setup_routes(app, conf):
     app.router.add_route('*', '/api/v1/upload', upload.handle)
     path_assets = os.path.join(app['PATH-TEMPLATES'], 'assets')
     app.router.add_static('/assets/', path_assets, show_index=True)
-    app.router.add_route('*', '/id/{major_id}/', major.handle)
-    app.router.add_route('*', '/id/{major_id}/{attachment}', major.handle_attachment)
-    app.router.add_route('*', '/sid/{major_id}/{minor}', minor.handle)
     app.router.add_get('/', handle_index)
+    app.router.add_route('*', '/❤️/{path:.*}', major.handle_full)
 
 
 def timeout_daily_midnight(app):

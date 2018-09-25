@@ -5,7 +5,7 @@ import shutil
 import datetime
 import json
 
-from handler.entity import PATH_META_SELF
+from handler.upload import PATH_META_SELF
 
 #= '.meta/self'
 PATH_META_FOREIGN = '.meta/foreign'
@@ -73,7 +73,7 @@ def generate_index_table(app):
     create_id_list(app)
     for entity in create_id_list(app):
         tbl += '<tr>'
-        tbl += '<td><a href="id/' + entity.id + '/">' + entity.id + '</a></td>'
+        tbl += '<td><a href="❤️/' + entity.id + '/">' + entity.id + '</a></td>'
         tbl += '<td>' + human_date_delta(entity.modified_last) + ' (' + entity.modified_last.strftime('%d %B %Y') + ')</td>'
         tbl += '<td>' + entity.modified_first.strftime('%d %B %Y') + '</td>'
         tbl += '<td>' + entity.submitter_last +'</td>'
