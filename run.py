@@ -80,7 +80,6 @@ def setup_routes(app, conf):
     app.router.add_get('/', handle_index)
     app.router.add_route('*', '/❤️/{path:.*}', major.handle_full)
 
-
 def timeout_daily_midnight(app):
     try:
         app['QUEUE'].put_nowait(None)

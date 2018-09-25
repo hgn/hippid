@@ -12,8 +12,6 @@ PATH_META_FOREIGN = '.meta/foreign'
 
 extensions = ['markdown.extensions.tables', 'fenced_code', 'nl2br']
 
-class Entity(): pass
-
 def hippid_date_parse(string):
     return datetime.datetime.strptime(string, '%Y-%m-%dT%H:%M:%S.%f')
 
@@ -56,7 +54,7 @@ def create_id_list(app):
         full = os.path.join(app['PATH-DB'], major_id)
         if not os.path.isdir(full):
             continue
-        ret = Entity()
+        ret = lambda: None # functions are objets too
         path_meta_self_file = os.path.join(full, PATH_META_SELF,  'meta.json')
         with open(path_meta_self_file) as f:
             meta_data = json.load(f)
@@ -131,6 +129,7 @@ def generate_major_pages(app):
         generate_major_page(app, major_id, full)
 
 def generate_all(app):
+    print('generate new, full pages for all pages')
     generate_major_pages(app)
     generate_index(app)
 
