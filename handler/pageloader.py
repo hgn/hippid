@@ -26,7 +26,7 @@ def content_file(request, path):
         return web.Response(body=content)
 
 
-def handle_full(request):
+def handle(request):
     path = request.match_info['path']
     m = RE_FINAL_SLASH.match(path)
     if m:

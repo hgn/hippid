@@ -18,8 +18,7 @@ from aiohttp import web
 from handler import api_ping
 from handler import upload
 from handler import generator
-from handler import major
-from handler import minor
+from handler import pageloader
 
 try:
     import pympler.summary
@@ -78,7 +77,7 @@ def setup_routes(app, conf):
     path_assets = os.path.join(app['PATH-TEMPLATES'], 'assets')
     app.router.add_static('/assets/', path_assets, show_index=True)
     app.router.add_get('/', handle_index)
-    app.router.add_route('*', '/❤️/{path:.*}', major.handle_full)
+    app.router.add_route('*', '/❤️/{path:.*}', pageloader.handle)
 
 def timeout_daily_midnight(app):
     try:
@@ -218,7 +217,6 @@ def configuration_check(conf):
         sys.stderr.write("No path configured for database, but required! Please specify "
                          "a path in db section\n")
         sys.exit(EXIT_FAILURE)
-
 
 def conf_init():
     args = parse_args()
