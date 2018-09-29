@@ -45,6 +45,28 @@ def create_id_insert(object_list, new):
             return
     object_list.append(new)
 
+def analyze_meta_test(major_id, full_path):
+    root = full_path
+    d = {'passed' : 0, 'failed': 0, 'error' : 0 }
+    for path, subdirs, files in os.walk(root):
+        for name in files:
+            if name != "main.meta":
+                continue
+            filepath = os.path.join(path, name)
+            with open(filepath) as fd:
+                meta_test_data = json.load(fd)
+            meta_test_data['type'] == 'test'
+            if meta_test_data['status'] == 'passed':
+                d['passed'] += 1
+            if meta_test_data['status'] == 'error':
+                d['error'] += 1
+            if meta_test_data['status'] == 'failed':
+                d['failed'] += 1
+    return d
+
+def meta_test_htmlize(d):
+    return "Passed:{},Failed:{},Errors:{}".format(d['passed'], d['failed'], d['error'])
+
 def create_id_list(app):
     ''' return a sorted object based list of id's with meta-data'''
     ret_list = list()
@@ -60,6 +82,7 @@ def create_id_list(app):
         ret.modified_first = hippid_date_parse(meta_data['time-last'])
         ret.submitter_last = meta_data['submitters'][-1]['name']
         ret.id = major_id
+        ret.meta_test = analyze_meta_test(major_id, full)
         create_id_insert(ret_list, ret)
     return ret_list
 
@@ -73,6 +96,7 @@ def generate_index_table(app):
         tbl += '<td>' + entity.modified_last.strftime('%Y-%m-%d %H:%M') + ' ('
         tbl +=          human_date_delta(entity.modified_last) + ')</td>'
         tbl += '<td>' + entity.modified_first.strftime('%Y-%m-%d %H:%M') + '</td>'
+        tbl += '<td>' + meta_test_htmlize(entity.meta_test) +'</td>'
         tbl += '<td>' + entity.submitter_last +'</td>'
         tbl += '</tr>'
     tbl += TBL_FOOTER
@@ -208,6 +232,7 @@ TBL_HEAD = '''
       <th scope="col">ID</th>
       <th scope="col">Last Modified</th>
       <th scope="col">First Modified</th>
+      <th scope="col">Status</th>
       <th scope="col">Last Submitter</th>
     </tr>
   </thead>
