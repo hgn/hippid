@@ -97,6 +97,10 @@ def process_major_entry(request, obj, major_path, existing=True):
         if 'base64-encoded' in major:
             content = base64.b64decode(content)
             mode = 'wb'
+        # ok, path can be subdir or subsubsub, so create if not created
+        dirname = os.path.dirname(path)
+        if not os.path.exists(dirname):
+            os.makedirs(dirname, exist_ok=True)
         with open(path, mode) as fd:
             fd.write(content)
     request.app['QUEUE'].put_nowait(["MAJOR", obj['major-id']])

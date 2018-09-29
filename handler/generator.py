@@ -18,9 +18,7 @@ def hippid_date_parse(string):
 def human_date_delta(date):
     diff = datetime.datetime.utcnow() - date
     s = diff.seconds
-    if diff.days > 7 or diff.days < 0:
-        return d.strftime('%d %b %y')
-    elif diff.days == 1:
+    if diff.days == 1:
         return '1 day ago'
     elif diff.days > 1:
         return '{} days ago'.format(diff.days)
@@ -31,11 +29,11 @@ def human_date_delta(date):
     elif s < 120:
         return '1 minute ago'
     elif s < 3600:
-        return '{} minutes ago'.format(s / 60)
+        return '{} minutes ago'.format(int(s / 60))
     elif s < 7200:
         return '1 hour ago'
     else:
-        return '{} hours ago'.format(s / 3600)
+        return '{} hours ago'.format(int(s / 3600))
 
 def create_id_insert(object_list, new):
     if len(object_list) <= 0:
@@ -72,8 +70,9 @@ def generate_index_table(app):
     for entity in create_id_list(app):
         tbl += '<tr>'
         tbl += '<td><a href="❤️/' + entity.id + '/">' + entity.id + '</a></td>'
-        tbl += '<td>' + human_date_delta(entity.modified_last) + ' (' + entity.modified_last.strftime('%d %B %Y') + ')</td>'
-        tbl += '<td>' + entity.modified_first.strftime('%d %B %Y') + '</td>'
+        tbl += '<td>' + entity.modified_last.strftime('%Y-%m-%d %H:%M') + ' ('
+        tbl +=          human_date_delta(entity.modified_last) + ')</td>'
+        tbl += '<td>' + entity.modified_first.strftime('%Y-%m-%d %H:%M') + '</td>'
         tbl += '<td>' + entity.submitter_last +'</td>'
         tbl += '</tr>'
     tbl += TBL_FOOTER
@@ -91,58 +90,115 @@ def generate_index(app):
     with open(path, 'w') as fd:
         fd.write(new_index)
 
-def process_md(app, major_id, md_name, path, full):
+def process_md(app, full):
     cnd = ''
     with open(full, 'r') as fd:
         cnt = fd.read()
     html = markdown.markdown(cnt, extensions=extensions)
     return html
 
-def process_remain(app, major_id, filename_name, path, full, index_path):
+from shutil import *
+def copytree(src, dst, symlinks=False, ignore=None):
+    names = os.listdir(src)
+    if ignore is not None:
+        ignored_names = ignore(src, names)
+    else:
+        ignored_names = set()
+
+    if not os.path.isdir(dst): # This one line does the trick
+        os.makedirs(dst)
+    errors = []
+    for name in names:
+        if name in ignored_names:
+            continue
+        srcname = os.path.join(src, name)
+        dstname = os.path.join(dst, name)
+        try:
+            if symlinks and os.path.islink(srcname):
+                linkto = os.readlink(srcname)
+                os.symlink(linkto, dstname)
+            elif os.path.isdir(srcname):
+                copytree(srcname, dstname, symlinks, ignore)
+            else:
+                # Will raise a SpecialFileError for unsupported file types
+                copy2(srcname, dstname)
+        # catch the Error from the recursive copytree so that we can
+        # continue with other files
+        except Error as err:
+            errors.extend(err.args[0])
+        except EnvironmentError as why:
+            errors.append((srcname, dstname, str(why)))
+    try:
+        copystat(src, dst)
+    except OSError as why:
+        if WindowsError is not None and isinstance(why, WindowsError):
+            # Copying file access times may fail on Windows
+            pass
+        else:
+            errors.extend((src, dst, str(why)))
+    if errors:
+        raise Error(errors)
+
+def process_remain(app, full, dst):
     """ simple copy the rest """
-    dst = os.path.join(index_path, filename_name)
+    for dir_part in full.split('/'):
+        if dir_part.startswith('.'):
+            # v1.2.4/.meta/foreign is ignored
+            return
     shutil.copyfile(full, dst)
 
-def generate_major_page(app, major_id, path):
-    index_path = os.path.join(app['PATH-GENERATE'], major_id)
-    os.makedirs(index_path, exist_ok=True)
+def generate_major_page(app, major_id, src_path, dst_path):
+    os.makedirs(dst_path, exist_ok=True)
     index = app['BLOB-HEADER']
-    for filename in sorted(os.listdir(path)):
-        full = os.path.join(path, filename)
-        if filename.endswith('.md'):
-            index += process_md(app, major_id, filename, path, full)
+    for filename in sorted(os.listdir(src_path)):
+        full = os.path.join(src_path, filename)
+        print(full)
+        if os.path.isdir(full):
+            # do it recursevily
+            src_path_tmp = os.path.join(src_path, filename)
+            dst_path_tmp = os.path.join(dst_path, filename)
+            generate_major_page(app, major_id, src_path_tmp, dst_path_tmp)
+        elif filename.endswith('.md'):
+            index += process_md(app, full)
         elif filename.startswith('.'):
+            # meta files are ignored
+            # FIXME: can this be removed
+            continue
+        elif filename.endswith('.meta'):
             # meta files are ignored
             continue
         else:
-            process_remain(app, major_id, filename, path, full, index_path)
+            full_dst = os.path.join(dst_path, filename)
+            process_remain(app, full, full_dst)
     index += app['BLOB-FOOTER']
-    index_file_path = os.path.join(index_path, 'index.html')
+    index_file_path = os.path.join(dst_path, 'index.html')
     with open(index_file_path, 'w') as fd:
         fd.write(index)
 
-def generate_major_pages(app):
-    for major_id in os.listdir(app['PATH-DB']):
-        full = os.path.join(app['PATH-DB'], major_id)
-        if not os.path.isdir(full):
-            continue
-        generate_major_page(app, major_id, full)
-
 def generate_all(app):
-    print('generate new, full pages for all pages')
-    generate_major_pages(app)
+    for major_id in os.listdir(app['PATH-DB']):
+        src_path = os.path.join(app['PATH-DB'], major_id)
+        if not os.path.isdir(src_path):
+            continue
+        dst_path = os.path.join(app['PATH-GENERATE'], major_id)
+        generate_major_page(app, major_id, src_path, dst_path)
     generate_index(app)
 
 def generate_specific(app, value):
     type_, major_id = value
-    generate_all(app)
+    src_path = os.path.join(app['PATH-DB'], major_id)
+    dst_path = os.path.join(app['PATH-GENERATE'], major_id)
+    generate_major_page(app, major_id, src_path, dst_path)
+    generate_index(app)
 
 async def generator(app):
     while True:
         value = await app['QUEUE'].get()
         if not value:
+            print('generate all')
             generate_all(app)
         else:
+            print('generate specific {}'.format(value))
             generate_specific(app, value)
 
 TBL_HEAD = '''
