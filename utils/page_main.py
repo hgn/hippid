@@ -1,6 +1,7 @@
 import os
 import time
 import re
+import mimetypes
 
 from aiohttp import web
 
@@ -23,7 +24,10 @@ def content_file(request, path):
         return web.Response(text="File not available: {}, SRY, ¯\_(ツ)_/¯".format(path))
     with open(path, 'br') as content_file:
         content = content_file.read()
-        return web.Response(body=content)
+    mime_type, _ = mimetypes.guess_type(path)
+    if mime_type is None:
+        mime_type = "binary/octet-stream"
+    return web.Response(body=content, content_type=mime_type)
 
 
 def handle(request):
