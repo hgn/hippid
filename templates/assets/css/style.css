@@ -2,6 +2,25 @@ body {
   font-size: .875rem;
 }
 
+blockquote {
+  background: #eff6fb;
+  border-left: 5px solid #00bcf2;
+  margin: 0em 0px;
+  padding: 0.5em 10px;
+}
+
+blockquote:before {
+  color: #ccc;
+  font-size: 4em;
+  line-height: 0.1em;
+  margin-right: 0.25em;
+  vertical-align: -0.4em;
+}
+
+blockquote p {
+  display: inline;
+}
+
 .feather {
   width: 16px;
   height: 16px;
