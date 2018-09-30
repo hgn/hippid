@@ -5,6 +5,8 @@ import json
 
 from aiohttp import web
 
+from utils import helper
+
 TBL_HEAD = '''
 <table class="table table-striped table-hover table-sm">
   <thead>
@@ -22,6 +24,10 @@ TBL_FOOTER = '''
 </table>
 '''
 
+def humanize_date(string):
+    d = helper.hippid_date_parse(string)
+    return d.strftime('%H:%M:%S - %Y-%m-%d')
+
 def generate_journal_info(request):
     path_logfile = os.path.join(request.app['PATH-DB'], 'journal.json')
     full_journal = ''
@@ -29,7 +35,7 @@ def generate_journal_info(request):
         for line in fd:
             entry = json.loads(line)
             tbl  = '<tr>'
-            tbl += '<td>' + entry['timestamp'] + '</td>'
+            tbl += '<td>' + humanize_date(entry['timestamp']) + '</td>'
             tbl += '<td>' + entry['msg'] + '</td>'
             tbl += '<td>' + entry['severity'] + '</td>'
             tbl += '</tr>\n'
