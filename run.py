@@ -101,21 +101,41 @@ def gc_exec(app):
         print("the generator was already informed, ignore it, no need to regenerate")
 
 
-def gc_register(app):
+def gc_majors_register(app):
     if 'gc_interval' not in app['CONF']:
         journal.log(app, 'no garbage collection interval specified - gc disabled!')
         return
     interval = app['CONF']['gc_interval']
     call_time = app['LOOP'].time() + interval
-    msg = "register next gc timeout in {} seconds]".format(interval)
+    msg = "register next gc timeout in {} seconds".format(interval)
     journal.log(app, msg)
-    app['LOOP'].call_at(call_time, gc_register, app)
+    app['LOOP'].call_at(call_time, gc_majors_register, app)
     gc_exec(app)
 
 
-def setup_gc(app):
-    gc_register(app)
+def setup_gc_majors(app):
+    gc_majors_register(app)
 
+def seconds_to_midnight():
+    now = datetime.datetime.now()
+    deltatime = datetime.timedelta(days=1)
+    tomorrow = datetime.datetime.replace(now + deltatime, hour=0, minute=0, second=0)
+    seconds = (tomorrow - now).seconds
+    if seconds < 60: return 60.0 # sanity checks
+    if seconds > 60 * 60 * 24: return 60.0 * 60 * 24
+    return seconds
+
+def gc_journal_register(app):
+    interval = app['CONF']['gc_interval']
+    wait_time = seconds_to_midnight()
+    call_time = app['LOOP'].time() + wait_time
+    msg = "register next journal gc timeout in {} minutes".format(wait_time // 60)
+    journal.log(app, msg)
+    app['LOOP'].call_at(call_time, gc_journal_register, app)
+    journal.gc(app)
+
+def setup_gc_journal(app):
+    gc_journal_register(app)
 
 def setup_early(app):
     app['DEBUG'] = False
@@ -211,7 +231,8 @@ def main(conf):
     setup_raw(app)
     setup_template_files(app)
     setup_routes(app, conf)
-    setup_gc(app)
+    setup_gc_majors(app)
+    setup_gc_journal(app)
     setup_generator(app)
     web.run_app(app, host="::", port=8080)
 

@@ -26,8 +26,6 @@ def gc_outdated_list(app, lifetime_max):
             ret.append([major_id, full, (age - lifetime_max)])
     return ret
 
-
-
 def run(app, lifetime_max):
     outdated = gc_outdated_list(app, lifetime_max)
     for outdate in outdated:
