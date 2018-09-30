@@ -8,6 +8,8 @@ import time
 import sys
 import base64
 
+from utils import journal
+
 import aiohttp
 
 
@@ -116,11 +118,21 @@ def process_major(request, obj):
     return process_major_entry(request, obj, major_path, existing=False)
 
 async def handle(request):
+    start = time.time()
     obj = await request.json()
+    ret = aiohttp.web.Response(status=400, body="message corrupt")
     if 'type' in obj and obj['type'] == 'major':
-        return process_major(request, obj)
+        ret = process_major(request, obj)
     if 'type' in obj and obj['type'] == 'minor':
-        return process_minor(request, obj)
-    return aiohttp.web.Response(status=400, body="message corrupt")
+        ret = process_minor(request, obj)
+    if request.app['DEBUG']:
+        peername = request.transport.get_extra_info('peername')
+        peer = "unknown"
+        if peername is not None:
+            peer = '{}:{}'.format(peername[0], peername[1])
+        diff = time.time() - start
+        msg = 'processed upload request from {} in {:.4f} seconds'.format(peer, diff)
+        journal.log(request.app, msg)
+    return ret
 
 

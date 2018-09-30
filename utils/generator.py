@@ -5,6 +5,7 @@ import shutil
 import datetime
 import json
 
+from utils import journal
 from utils.upload import PATH_META_SELF
 
 #= '.meta/self'
@@ -176,7 +177,6 @@ def generate_major_page(app, major_id, src_path, dst_path):
     index = app['BLOB-HEADER']
     for filename in sorted(os.listdir(src_path)):
         full = os.path.join(src_path, filename)
-        print(full)
         if os.path.isdir(full):
             # do it recursevily
             src_path_tmp = os.path.join(src_path, filename)
@@ -218,12 +218,17 @@ def generate_specific(app, value):
 async def generator(app):
     while True:
         value = await app['QUEUE'].get()
+        start = time.time()
         if not value:
-            print('generate all')
+            mode = 'all'
             generate_all(app)
         else:
-            print('generate specific {}'.format(value))
+            mode = 'specific,{}'.format(value[1])
             generate_specific(app, value)
+        if app['DEBUG']:
+            diff = time.time() - start
+            msg = 'page generation completed (mode: {}) in {:.4f} seconds'.format(mode, diff)
+            journal.log(app, msg)
 
 TBL_HEAD = '''
 <table class="table table-striped table-hover table-sm">

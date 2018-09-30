@@ -5,7 +5,6 @@ import shutil
 import datetime
 import json
 
-from utils.upload import PATH_META_SELF
 from utils import helper
 
 def _log_write(app, entry):

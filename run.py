@@ -20,6 +20,7 @@ from utils import generator
 from utils import journal
 from utils import page_main
 from utils import page_journal
+from utils import page_disk_info
 
 try:
     import pympler.summary
@@ -79,6 +80,7 @@ def setup_routes(app, conf):
     app.router.add_static('/assets/', path_assets, show_index=True)
     app.router.add_get('/', handle_index)
     app.router.add_route('*', '/journal', page_journal.handle)
+    app.router.add_route('*', '/disk-info', page_disk_info.handle)
     app.router.add_route('*', '/❤️/{path:.*}', page_main.handle)
 
 def timeout_daily_midnight(app):
@@ -89,7 +91,7 @@ def timeout_daily_midnight(app):
         pass
 
 def seconds_to_midnight():
-    return 5
+    return 10
     now = datetime.datetime.now()
     deltatime = datetime.timedelta(days=1)
     tomorrow = datetime.datetime.replace(now + deltatime, hour=0, minute=0, second=0)
@@ -109,6 +111,15 @@ def register_timeout_handler_daily(app):
 
 def register_timeout_handler(app):
     register_timeout_handler_daily(app)
+
+
+def setup_early(app):
+    app['DEBUG'] = False
+    print(app['CONF'])
+    if 'debug' in app['CONF']:
+        if app['CONF']['debug'] == True:
+            app['DEBUG'] = True
+
 
 def setup_paths(app):
     app['path-root'] = os.path.dirname(os.path.realpath(__file__))
@@ -190,6 +201,7 @@ def setup_generator(app):
 def main(conf):
     init_debug(conf)
     app = init_aiohttp(conf)
+    setup_early(app)
     setup_paths(app)
     journal.log(app, 'start sequence hippid')
     setup_page_dir(app)
