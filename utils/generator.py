@@ -5,7 +5,7 @@ import shutil
 import datetime
 import json
 
-from handler.upload import PATH_META_SELF
+from utils.upload import PATH_META_SELF
 
 #= '.meta/self'
 PATH_META_FOREIGN = '.meta/foreign'
@@ -70,8 +70,8 @@ def meta_test_htmlize(d):
 def create_id_list(app):
     ''' return a sorted object based list of id's with meta-data'''
     ret_list = list()
-    for major_id in os.listdir(app['PATH-DB']):
-        full = os.path.join(app['PATH-DB'], major_id)
+    for major_id in os.listdir(app['PATH-RAW']):
+        full = os.path.join(app['PATH-RAW'], major_id)
         if not os.path.isdir(full):
             continue
         ret = lambda: None # functions are objets too
@@ -200,8 +200,8 @@ def generate_major_page(app, major_id, src_path, dst_path):
         fd.write(index)
 
 def generate_all(app):
-    for major_id in os.listdir(app['PATH-DB']):
-        src_path = os.path.join(app['PATH-DB'], major_id)
+    for major_id in os.listdir(app['PATH-RAW']):
+        src_path = os.path.join(app['PATH-RAW'], major_id)
         if not os.path.isdir(src_path):
             continue
         dst_path = os.path.join(app['PATH-GENERATE'], major_id)
@@ -210,7 +210,7 @@ def generate_all(app):
 
 def generate_specific(app, value):
     type_, major_id = value
-    src_path = os.path.join(app['PATH-DB'], major_id)
+    src_path = os.path.join(app['PATH-RAW'], major_id)
     dst_path = os.path.join(app['PATH-GENERATE'], major_id)
     generate_major_page(app, major_id, src_path, dst_path)
     generate_index(app)

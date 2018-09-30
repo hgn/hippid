@@ -4,7 +4,6 @@
 import os
 import sys
 import datetime
-import json
 import random
 import argparse
 import asyncio
@@ -15,10 +14,11 @@ import glob
 
 from aiohttp import web
 
-from handler import api_ping
-from handler import upload
-from handler import generator
-from handler import pageloader
+from utils import api_ping
+from utils import upload
+from utils import generator
+from utils import pageloader
+from utils import journal
 
 try:
     import pympler.summary
@@ -108,8 +108,14 @@ def register_timeout_handler_daily(app):
 def register_timeout_handler(app):
     register_timeout_handler_daily(app)
 
-def setup_path(app):
+def setup_paths(app):
     app['path-root'] = os.path.dirname(os.path.realpath(__file__))
+    if not 'db_path' in app["CONF"]:
+        app['PATH-DB'] = os.path.join(tempfile.mkdtemp())
+    else:
+        app['PATH-DB'] = os.path.join(app["CONF"]['db_path'])
+    print('DB path: {}'.format(app['PATH-DB']))
+    os.makedirs(app['PATH-DB'], exist_ok=True)
 
 async def recuring_memory_output(conf):
     while True:
@@ -130,25 +136,28 @@ def init_debug(conf):
     if 'memory_debug' in conf and conf['memory_debug']:
         init_debug_memory(conf)
 
-def setup_page_dir(app):
-    if 'generate_path' in app["CONF"]:
-        app['PATH-GENERATE'] = app["CONF"]['generate_path']
+
+def setup_db_path(app):
+    if not 'db_path' in app["CONF"]:
+        app['PATH-DB'] = os.path.join(tempfile.mkdtemp())
     else:
-        app['PATH-GENERATE'] = tempfile.mkdtemp()
-    if not app['PATH-GENERATE'].startswith('/'):
-        app['PATH-GENERATE'] = os.path.join(app['path-root'], app['PATH-GENERATE'])
+        app['PATH-DB'] = os.path.join(app["CONF"]['db_path'])
+    print('DB path: {}'.format(app['PATH-DB']))
+    os.makedirs(app['PATH-RAW'], exist_ok=True)
+
+
+def setup_page_dir(app):
+    app['PATH-GENERATE'] = os.path.join(app['PATH-DB'], "generated")
+    print('DB Generated: {}'.format(app['PATH-GENERATE']))
     if os.path.exists(app['PATH-GENERATE']):
-        print("remove generate_path first: {}".format(app['PATH-GENERATE']))
+        #print("remove generate_path first: {}".format(app['PATH-GENERATE']))
         shutil.rmtree(app['PATH-GENERATE'])
     os.makedirs(app['PATH-GENERATE'], exist_ok=True)
 
-def setup_db(app):
-    if not 'db_path' in app["CONF"]:
-        app['PATH-DB'] = tempfile.mkdtemp()
-    else:
-        app['PATH-DB'] = app["CONF"]['db_path']
-    print('DB path: {}'.format(app['PATH-DB']))
-    os.makedirs(app['PATH-DB'], exist_ok=True)
+def setup_raw(app):
+    app['PATH-RAW'] = os.path.join(app['PATH-DB'], "raw")
+    print('DB RAW: {}'.format(app['PATH-RAW']))
+    os.makedirs(app['PATH-RAW'], exist_ok=True)
 
 
 def setup_template_files(app):
@@ -179,10 +188,11 @@ def setup_generator(app):
 def main(conf):
     init_debug(conf)
     app = init_aiohttp(conf)
-    setup_path(app)
+    setup_paths(app)
+    journal.log(app, 'start sequence hippid')
     setup_page_dir(app)
+    setup_raw(app)
     setup_template_files(app)
-    setup_db(app)
     setup_routes(app, conf)
     register_timeout_handler(app)
     setup_generator(app)

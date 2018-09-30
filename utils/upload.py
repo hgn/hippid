@@ -110,7 +110,7 @@ def process_major_entry(request, obj, major_path, existing=True):
 def process_major(request, obj):
     if not 'major-id' in obj:
         return aiohttp.web.Response(status=400, body="message corrupt")
-    major_path = os.path.join(request.app['PATH-DB'], obj['major-id'])
+    major_path = os.path.join(request.app['PATH-RAW'], obj['major-id'])
     if os.path.exists(major_path):
         return process_major_entry(request, obj, major_path, existing=True)
     return process_major_entry(request, obj, major_path, existing=False)
