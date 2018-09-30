@@ -131,7 +131,7 @@ def init_debug(conf):
         init_debug_memory(conf)
 
 def setup_page_dir(app):
-    if not 'generate_path' in app["CONF"]:
+    if 'generate_path' in app["CONF"]:
         app['PATH-GENERATE'] = app["CONF"]['generate_path']
     else:
         app['PATH-GENERATE'] = tempfile.mkdtemp()

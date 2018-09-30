@@ -1,0 +1,9 @@
+[Unit]
+Description=HippiD - Collector Service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /usr/share/hippid/run.py -f /etc/hippid/hippid.conf
+
+[Install]
+WantedBy=multi-user.target
