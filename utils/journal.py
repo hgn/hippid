@@ -12,7 +12,7 @@ def _log_write(app, entry):
     path_logfile = os.path.join(app['PATH-DB'], 'journal.json')
     dj = json.dumps(entry, sort_keys=True, separators=(',', ': '))
     with open(path_logfile, 'a') as fd:
-        fd.write(dj)
+        fd.write(dj + '\n')
 
 def log(app, msg, severity='info', asynchronous=False):
     entry = dict()

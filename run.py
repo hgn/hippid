@@ -17,8 +17,9 @@ from aiohttp import web
 from utils import api_ping
 from utils import upload
 from utils import generator
-from utils import pageloader
 from utils import journal
+from utils import page_main
+from utils import page_journal
 
 try:
     import pympler.summary
@@ -77,7 +78,8 @@ def setup_routes(app, conf):
     path_assets = os.path.join(app['PATH-TEMPLATES'], 'assets')
     app.router.add_static('/assets/', path_assets, show_index=True)
     app.router.add_get('/', handle_index)
-    app.router.add_route('*', '/❤️/{path:.*}', pageloader.handle)
+    app.router.add_route('*', '/journal', page_journal.handle)
+    app.router.add_route('*', '/❤️/{path:.*}', page_main.handle)
 
 def timeout_daily_midnight(app):
     try:
