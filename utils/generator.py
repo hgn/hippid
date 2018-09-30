@@ -200,6 +200,15 @@ def generate_major_page(app, major_id, src_path, dst_path):
         fd.write(index)
 
 def generate_all(app):
+    # FIXME: this is just a short hack to get the
+    # generated dir clean. The drawback is that the data is
+    # probably for a larger amount of time (generation time)
+    # not accessible. The better solution is
+    # a) account outdated directory and remove afterwards
+    # b) generate to an new dirctory and symlink after generation
+    #    to the new directory and purge the old dir afterwards.
+    shutil.rmtree(app['PATH-GENERATE'])
+    os.makedirs(app['PATH-GENERATE'], exist_ok=True)
     for major_id in os.listdir(app['PATH-RAW']):
         src_path = os.path.join(app['PATH-RAW'], major_id)
         if not os.path.isdir(src_path):

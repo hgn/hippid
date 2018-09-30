@@ -18,6 +18,7 @@ from utils import api_ping
 from utils import upload
 from utils import generator
 from utils import journal
+from utils import gc
 from utils import page_main
 from utils import page_journal
 from utils import page_disk_info
@@ -73,6 +74,7 @@ async def handle_index(request):
         content = str.encode(content_file.read())
         return web.Response(body=content, content_type='text/html')
 
+
 def setup_routes(app, conf):
     app.router.add_route('*', '/api/v1/ping', api_ping.handle)
     app.router.add_route('*', '/api/v1/upload', upload.handle)
@@ -83,39 +85,40 @@ def setup_routes(app, conf):
     app.router.add_route('*', '/disk-info', page_disk_info.handle)
     app.router.add_route('*', '/❤️/{path:.*}', page_main.handle)
 
-def timeout_daily_midnight(app):
+
+def gc_purge_outdated(app):
+    gc_major_lifetime_max = 60 * 60 * 24 * 7 * 52
+    if 'gc_major_lifetime_max' in app['CONF']:
+        gc_major_lifetime_max = app['CONF']['gc_major_lifetime_max']
+    gc.run(app, gc_major_lifetime_max)
+
+
+def gc_exec(app):
+    gc_purge_outdated(app)
     try:
         app['QUEUE'].put_nowait(None)
     except:
         print("the generator was already informed, ignore it, no need to regenerate")
-        pass
-
-def seconds_to_midnight():
-    return 10
-    now = datetime.datetime.now()
-    deltatime = datetime.timedelta(days=1)
-    tomorrow = datetime.datetime.replace(now + deltatime, hour=0, minute=0, second=0)
-    seconds = (tomorrow - now).seconds
-    if seconds < 60: return 60.0 # sanity checks
-    if seconds > 60 * 60 * 24: return 60.0 * 60 * 24
-    return seconds
-
-def register_timeout_handler_daily(app):
-    loop = asyncio.get_event_loop()
-    midnight_sec = seconds_to_midnight()
-    call_time = loop.time() + midnight_sec
-    msg = "Register daily timeout [scheduled in {} seconds]".format(midnight_sec)
-    loop.call_at(call_time, register_timeout_handler_daily, app)
-    timeout_daily_midnight(app)
 
 
-def register_timeout_handler(app):
-    register_timeout_handler_daily(app)
+def gc_register(app):
+    if 'gc_interval' not in app['CONF']:
+        journal.log(app, 'no garbage collection interval specified - gc disabled!')
+        return
+    interval = app['CONF']['gc_interval']
+    call_time = app['LOOP'].time() + interval
+    msg = "register next gc timeout in {} seconds]".format(interval)
+    journal.log(app, msg)
+    app['LOOP'].call_at(call_time, gc_register, app)
+    gc_exec(app)
+
+
+def setup_gc(app):
+    gc_register(app)
 
 
 def setup_early(app):
     app['DEBUG'] = False
-    print(app['CONF'])
     if 'debug' in app['CONF']:
         if app['CONF']['debug'] == True:
             app['DEBUG'] = True
@@ -208,7 +211,7 @@ def main(conf):
     setup_raw(app)
     setup_template_files(app)
     setup_routes(app, conf)
-    register_timeout_handler(app)
+    setup_gc(app)
     setup_generator(app)
     web.run_app(app, host="::", port=8080)
 
