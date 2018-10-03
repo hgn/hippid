@@ -1,5 +1,7 @@
 # HippiD
 
+![level hierarchy](doc/images/level-hierarchy.png)
+
 # Exchange Data
 
 ```
