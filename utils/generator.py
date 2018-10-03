@@ -47,9 +47,11 @@ def create_id_insert(object_list, new):
     object_list.append(new)
 
 def analyze_meta_test(major_id, full_path):
-    root = full_path
-    d = {'passed' : 0, 'failed': 0, 'error' : 0 }
-    for path, subdirs, files in os.walk(root):
+    d = dict()
+    d['passed'] = list()
+    d['failed'] = list()
+    d['error'] = list()
+    for path, subdirs, files in os.walk(full_path):
         for name in files:
             if name != "main.meta":
                 continue
@@ -58,15 +60,24 @@ def analyze_meta_test(major_id, full_path):
                 meta_test_data = json.load(fd)
             meta_test_data['type'] == 'test'
             if meta_test_data['status'] == 'passed':
-                d['passed'] += 1
+                entry = dict()
+                entry['path'] = path
+                d['passed'].append(entry)
             if meta_test_data['status'] == 'error':
-                d['error'] += 1
+                entry = dict()
+                entry['path'] = path
+                d['error'].append(entry)
             if meta_test_data['status'] == 'failed':
-                d['failed'] += 1
+                entry = dict()
+                entry['path'] = path
+                d['failed'].append(entry)
     return d
 
 def meta_test_htmlize(d):
-    return "Passed:{},Failed:{},Errors:{}".format(d['passed'], d['failed'], d['error'])
+    html  = '<a href="#" data-toggle="tooltip" title="Failed test, SHOULD be fixed"> <span class="badge badge-danger">{}</span> </a>'.format(len(d['failed']))
+    html += '<a href="#" data-toggle="tooltip" title="Passed test - such wow!"> <span class="badge badge-success">{}</span> </a>'.format(len(d['passed']))
+    html += '<a href="#" data-toggle="tooltip" title="Test error within test system"> <span class="badge badge-info">{}</span>  </a>'.format(len(d['error']))
+    return html
 
 def create_id_list(app):
     ''' return a sorted object based list of id's with meta-data'''
@@ -172,9 +183,39 @@ def process_remain(app, full, dst):
             return
     shutil.copyfile(full, dst)
 
+
+def generate_sidebar(app, major_id):
+    path_full = os.path.join(app['PATH-RAW'], major_id)
+    meta_test = analyze_meta_test(major_id, path_full)
+
+    sidebar_html = app['BLOB-ID-SIDEBAR']
+    tmp_file_list = '<ul>{}</ul>'
+
+    failed_htmlized = ''
+    for failed in meta_test['failed']:
+        failed_htmlized += '<li><a href="{}">{}</a></li>'.format(failed['path'], failed['path'])
+    failed_htmlized = tmp_file_list.format(failed_htmlized)
+
+    passed_htmlized = ''
+    for passed in meta_test['passed']:
+        passed_htmlized += '<li><a href="{}">{}</a></li>'.format(passed['path'], passed['path'])
+    passed_htmlized = tmp_file_list.format(passed_htmlized)
+
+    error_htmlized = ''
+    for error in meta_test['error']:
+        error_htmlized += '<li><a href="{}">{}</a></li>'.format(error['path'], error['path'])
+    error_htmlized = tmp_file_list.format(error_htmlized)
+
+    return sidebar_html.format('x',
+            len(meta_test['failed']), failed_htmlized,
+            len(meta_test['passed']), passed_htmlized,
+            len(meta_test['error']), error_htmlized)
+
+
 def generate_major_page(app, major_id, src_path, dst_path):
     os.makedirs(dst_path, exist_ok=True)
     index = app['BLOB-HEADER']
+    index += app['BLOB-ID-MAIN-HEADER']
     for filename in sorted(os.listdir(src_path)):
         full = os.path.join(src_path, filename)
         if os.path.isdir(full):
@@ -194,6 +235,10 @@ def generate_major_page(app, major_id, src_path, dst_path):
         else:
             full_dst = os.path.join(dst_path, filename)
             process_remain(app, full, full_dst)
+    index += app['BLOB-ID-MAIN-FOOTER']
+    index += app['BLOB-ID-SIDE-HEADER']
+    index += generate_sidebar(app, major_id)
+    index += app['BLOB-ID-SIDE-FOOTER']
     index += app['BLOB-FOOTER']
     index_file_path = os.path.join(dst_path, 'index.html')
     with open(index_file_path, 'w') as fd:

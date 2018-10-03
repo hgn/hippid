@@ -207,9 +207,31 @@ def setup_template_files(app):
     full = os.path.join(app['PATH-TEMPLATES'], 'header.html')
     with open(full, 'r') as fd:
         app['BLOB-HEADER'] = fd.read()
+
     full = os.path.join(app['PATH-TEMPLATES'], 'footer.html')
     with open(full, 'r') as fd:
         app['BLOB-FOOTER'] = fd.read()
+
+    full = os.path.join(app['PATH-TEMPLATES'], 'id-main-header.html')
+    with open(full, 'r') as fd:
+        app['BLOB-ID-MAIN-HEADER'] = fd.read()
+
+    full = os.path.join(app['PATH-TEMPLATES'], 'id-main-footer.html')
+    with open(full, 'r') as fd:
+        app['BLOB-ID-MAIN-FOOTER'] = fd.read()
+
+    full = os.path.join(app['PATH-TEMPLATES'], 'id-side-header.html')
+    with open(full, 'r') as fd:
+        app['BLOB-ID-SIDE-HEADER'] = fd.read()
+
+    full = os.path.join(app['PATH-TEMPLATES'], 'id-side-footer.html')
+    with open(full, 'r') as fd:
+        app['BLOB-ID-SIDE-FOOTER'] = fd.read()
+
+    full = os.path.join(app['PATH-TEMPLATES'], 'id-sidebar.html')
+    with open(full, 'r') as fd:
+        app['BLOB-ID-SIDEBAR'] = fd.read()
+
     # now copy assets recursively
     src = os.path.join(app['PATH-TEMPLATES'], 'assets')
     dst = app['PATH-GENERATE'] + '/assets'
