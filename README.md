@@ -1,5 +1,13 @@
 # HippiD
 
+- *level 1* reflect a particular version of a software/component. This can be
+	any string, but version string is probably the most sensible. E.g. `v1.2.3`,
+	`v101`, `7.6.5`, `v1.2.3-23-username` or just a commit id:
+	`623f905db52260a4c65aba13b49d8af8a4e31bc7`. You can put everything in this
+	one page - if you want. But for test meta data you need an additional level
+- *level 2* objects are the final test object. They can have test status like
+	passed, failed or error.
+
 ![level hierarchy](doc/images/level-hierarchy.png)
 
 # Exchange Data
