@@ -137,8 +137,11 @@ def process_md(app, full):
     cnd = ''
     with open(full, 'r') as fd:
         cnt = fd.read()
-    html = markdown.markdown(cnt, extensions=extensions)
-    return html
+    return markdown.markdown(cnt, extensions=extensions)
+
+def process_html(app, full):
+    with open(full, 'r') as fd:
+        return fd.read()
 
 from shutil import *
 def copytree(src, dst, symlinks=False, ignore=None):
@@ -279,6 +282,9 @@ def generate_major_page(app, major_id, src_path, dst_path, level_one=True):
             generate_major_page(app, major_id, src_path_tmp, dst_path_tmp, level_one=False)
         elif filename.endswith('.md'):
             index += process_md(app, full)
+        elif filename.endswith('.html'):
+            # it is legitim to upload html directly (probably from other test systems)
+            index += process_html(app, full)
         elif filename.startswith('.'):
             # meta files are ignored
             # FIXME: can this be removed
