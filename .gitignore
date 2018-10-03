@@ -50,3 +50,4 @@ coverage.xml
 venv/
 ENV/
 
+assets/hippid.conf.dev

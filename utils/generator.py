@@ -55,6 +55,7 @@ def analyze_meta_test(major_id, full_path):
         for name in files:
             if name != "main.meta":
                 continue
+            url = path[len(full_path) + 1:] + '/'
             filepath = os.path.join(path, name)
             with open(filepath) as fd:
                 meta_test_data = json.load(fd)
@@ -62,14 +63,17 @@ def analyze_meta_test(major_id, full_path):
             if meta_test_data['status'] == 'passed':
                 entry = dict()
                 entry['path'] = path
+                entry['url'] = url
                 d['passed'].append(entry)
             if meta_test_data['status'] == 'error':
                 entry = dict()
                 entry['path'] = path
+                entry['url'] = url
                 d['error'].append(entry)
             if meta_test_data['status'] == 'failed':
                 entry = dict()
                 entry['path'] = path
+                entry['url'] = url
                 d['failed'].append(entry)
     return d
 
@@ -188,31 +192,31 @@ def generate_sidebar(app, major_id):
     path_full = os.path.join(app['PATH-RAW'], major_id)
     meta_test = analyze_meta_test(major_id, path_full)
 
-    sidebar_html = app['BLOB-ID-SIDEBAR']
+    sidebar_template = app['BLOB-ID-SIDEBAR']
     tmp_file_list = '<ul>{}</ul>'
 
     failed_htmlized = ''
     for failed in meta_test['failed']:
-        failed_htmlized += '<li><a href="{}">{}</a></li>'.format(failed['path'], failed['path'])
+        failed_htmlized += '<li><a href="{}">{}</a></li>'.format(failed['url'], failed['url'])
     failed_htmlized = tmp_file_list.format(failed_htmlized)
 
     passed_htmlized = ''
     for passed in meta_test['passed']:
-        passed_htmlized += '<li><a href="{}">{}</a></li>'.format(passed['path'], passed['path'])
+        passed_htmlized += '<li><a href="{}">{}</a></li>'.format(passed['url'], passed['url'])
     passed_htmlized = tmp_file_list.format(passed_htmlized)
 
     error_htmlized = ''
     for error in meta_test['error']:
-        error_htmlized += '<li><a href="{}">{}</a></li>'.format(error['path'], error['path'])
+        error_htmlized += '<li><a href="{}">{}</a></li>'.format(error['url'], error['url'])
     error_htmlized = tmp_file_list.format(error_htmlized)
 
-    return sidebar_html.format('x',
+    return sidebar_template.format('x',
             len(meta_test['failed']), failed_htmlized,
             len(meta_test['passed']), passed_htmlized,
             len(meta_test['error']), error_htmlized)
 
 
-def generate_major_page(app, major_id, src_path, dst_path):
+def generate_major_page(app, major_id, src_path, dst_path, level_one=True):
     os.makedirs(dst_path, exist_ok=True)
     index = app['BLOB-HEADER']
     index += app['BLOB-ID-MAIN-HEADER']
@@ -222,7 +226,7 @@ def generate_major_page(app, major_id, src_path, dst_path):
             # do it recursevily
             src_path_tmp = os.path.join(src_path, filename)
             dst_path_tmp = os.path.join(dst_path, filename)
-            generate_major_page(app, major_id, src_path_tmp, dst_path_tmp)
+            generate_major_page(app, major_id, src_path_tmp, dst_path_tmp, level_one=False)
         elif filename.endswith('.md'):
             index += process_md(app, full)
         elif filename.startswith('.'):
@@ -237,7 +241,9 @@ def generate_major_page(app, major_id, src_path, dst_path):
             process_remain(app, full, full_dst)
     index += app['BLOB-ID-MAIN-FOOTER']
     index += app['BLOB-ID-SIDE-HEADER']
-    index += generate_sidebar(app, major_id)
+    if level_one:
+        # we generate a sidebar only at level 1 objects
+        index += generate_sidebar(app, major_id)
     index += app['BLOB-ID-SIDE-FOOTER']
     index += app['BLOB-FOOTER']
     index_file_path = os.path.join(dst_path, 'index.html')
@@ -259,14 +265,14 @@ def generate_all(app):
         if not os.path.isdir(src_path):
             continue
         dst_path = os.path.join(app['PATH-GENERATE'], major_id)
-        generate_major_page(app, major_id, src_path, dst_path)
+        generate_major_page(app, major_id, src_path, dst_path, level_one=True)
     generate_index(app)
 
 def generate_specific(app, value):
     type_, major_id = value
     src_path = os.path.join(app['PATH-RAW'], major_id)
     dst_path = os.path.join(app['PATH-GENERATE'], major_id)
-    generate_major_page(app, major_id, src_path, dst_path)
+    generate_major_page(app, major_id, src_path, dst_path, level_one=True)
     generate_index(app)
 
 async def generator(app):
