@@ -83,6 +83,11 @@ def meta_test_htmlize(d):
     html += '<a href="#" data-toggle="tooltip" title="Test error within test system"> <span class="badge badge-info">{}</span>  </a>'.format(len(d['error']))
     return html
 
+def meta_own(app, full):
+    path_meta_self_file = os.path.join(full, PATH_META_SELF,  'meta.json')
+    with open(path_meta_self_file) as f:
+        return json.load(f)
+
 def create_id_list(app):
     ''' return a sorted object based list of id's with meta-data'''
     ret_list = list()
@@ -91,9 +96,7 @@ def create_id_list(app):
         if not os.path.isdir(full):
             continue
         ret = lambda: None # functions are objets too
-        path_meta_self_file = os.path.join(full, PATH_META_SELF,  'meta.json')
-        with open(path_meta_self_file) as f:
-            meta_data = json.load(f)
+        meta_data = meta_own(app, full)
         ret.modified_last = hippid_date_parse(meta_data['time-last'])
         ret.modified_first = hippid_date_parse(meta_data['time-last'])
         ret.submitter_last = meta_data['submitters'][-1]['name']
@@ -108,7 +111,7 @@ def generate_index_table(app):
     create_id_list(app)
     for entity in create_id_list(app):
         tbl += '<tr>'
-        tbl += '<td><a href="❤️/' + entity.id + '/">' + entity.id + '</a></td>'
+        tbl += '<td><a href="id/' + entity.id + '/">' + entity.id + '</a></td>'
         tbl += '<td>' + entity.modified_last.strftime('%Y-%m-%d %H:%M') + ' ('
         tbl +=          human_date_delta(entity.modified_last) + ')</td>'
         tbl += '<td>' + entity.modified_first.strftime('%Y-%m-%d %H:%M') + '</td>'
@@ -187,10 +190,57 @@ def process_remain(app, full, dst):
             return
     shutil.copyfile(full, dst)
 
+def generate_sidebar_graph(app, major_id, meta_test):
+    meta_list = [meta_test['passed'], meta_test['failed'], meta_test['error']]
+    if not any(len(i) > 0 for i in meta_list):
+        return ""
+    html = '''
+    </canvas><canvas id="donutChart"></canvas>
+    <script>
+    var ctx = document.getElementById("donutChart").getContext('2d');
+    var myChart = new Chart(ctx, {{
+      type: 'pie',
+      data: {{
+        labels: ["Failed", "Passed", "Error"],
+        datasets: [{{
+          backgroundColor: [
+            "#dc3545",
+            "#28a745",
+            "#17a2b8"
+          ],
+          data: [{}, {}, {}]
+        }}]
+      }}
+    }});
+    </script>
+    '''.format(len(meta_test['failed']), len(meta_test['passed']), len(meta_test['error']))
+    return html
+
+def generate_sidebar_top(app, major_id, meta_test, path_full):
+    meta_data = meta_own(app, path_full)
+    modified_last = hippid_date_parse(meta_data['time-last']).strftime('%Y-%m-%d %H:%M')
+    modified_first = hippid_date_parse(meta_data['time-last']).strftime('%Y-%m-%d %H:%M')
+    submitter_last = meta_data['submitters'][-1]['name']
+    submitter_no = len(meta_data['submitters'])
+    submitter_names = list(set([i['name'] for i in meta_data['submitters']]))
+
+    html  = '<ul>'
+    html += '<li>Last Modified: {}</li>'.format(modified_last)
+    html += '<li>First Uploaded: {}</li>'.format(modified_first)
+    html += '<li>Last Submitter: {}</li>'.format(submitter_last)
+    html += '<li>Number of Submitters: {}</li>'.format(submitter_no)
+    html += '<li>Submitter Names: {}</li>'.format(", ".join(submitter_names))
+    html += '</ul>'
+
+    html += generate_sidebar_graph(app, major_id, meta_test)
+
+    return html
+
 
 def generate_sidebar(app, major_id):
     path_full = os.path.join(app['PATH-RAW'], major_id)
     meta_test = analyze_meta_test(major_id, path_full)
+    sidebar_top_htmlize = generate_sidebar_top(app, major_id, meta_test, path_full)
 
     sidebar_template = app['BLOB-ID-SIDEBAR']
     tmp_file_list = '<ul>{}</ul>'
@@ -210,7 +260,7 @@ def generate_sidebar(app, major_id):
         error_htmlized += '<li><a href="{}">{}</a></li>'.format(error['url'], error['url'])
     error_htmlized = tmp_file_list.format(error_htmlized)
 
-    return sidebar_template.format('x',
+    return sidebar_template.format(sidebar_top_htmlize,
             len(meta_test['failed']), failed_htmlized,
             len(meta_test['passed']), passed_htmlized,
             len(meta_test['error']), error_htmlized)

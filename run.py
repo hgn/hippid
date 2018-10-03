@@ -83,7 +83,7 @@ def setup_routes(app, conf):
     app.router.add_get('/', handle_index)
     app.router.add_route('*', '/journal', page_journal.handle)
     app.router.add_route('*', '/disk-info', page_disk_info.handle)
-    app.router.add_route('*', '/❤️/{path:.*}', page_main.handle)
+    app.router.add_route('*', '/id/{path:.*}', page_main.handle)
 
 
 def gc_purge_outdated(app):
