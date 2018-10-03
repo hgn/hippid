@@ -122,14 +122,14 @@ def generate_index_table(app):
     return tbl
 
 def generate_index_header(app):
-    return '<h2>Overview</h2>'
+    return '<h2>Reports</h2>'
 
 def generate_index(app):
     new_index = app['BLOB-HEADER']
     new_index += generate_index_header(app)
     new_index += generate_index_table(app)
     new_index += app['BLOB-FOOTER']
-    path = os.path.join(app['PATH-GENERATE'], 'index.html')
+    path = os.path.join(app['PATH-GENERATE-ID'], 'index.html')
     with open(path, 'w') as fd:
         fd.write(new_index)
 
@@ -308,22 +308,30 @@ def generate_all(app):
     # a) account outdated directory and remove afterwards
     # b) generate to an new dirctory and symlink after generation
     #    to the new directory and purge the old dir afterwards.
-    shutil.rmtree(app['PATH-GENERATE'])
-    os.makedirs(app['PATH-GENERATE'], exist_ok=True)
+    shutil.rmtree(app['PATH-GENERATE-ID'])
+    os.makedirs(app['PATH-GENERATE-ID'], exist_ok=True)
     for major_id in os.listdir(app['PATH-RAW']):
         src_path = os.path.join(app['PATH-RAW'], major_id)
         if not os.path.isdir(src_path):
             continue
-        dst_path = os.path.join(app['PATH-GENERATE'], major_id)
+        dst_path = os.path.join(app['PATH-GENERATE-ID'], major_id)
         generate_major_page(app, major_id, src_path, dst_path, level_one=True)
     generate_index(app)
+    inform_generator_dashboard(app)
 
 def generate_specific(app, value):
     type_, major_id = value
     src_path = os.path.join(app['PATH-RAW'], major_id)
-    dst_path = os.path.join(app['PATH-GENERATE'], major_id)
+    dst_path = os.path.join(app['PATH-GENERATE-ID'], major_id)
     generate_major_page(app, major_id, src_path, dst_path, level_one=True)
     generate_index(app)
+    inform_generator_dashboard(app)
+
+def inform_generator_dashboard(app):
+    try:
+        app['QUEUE-GENERATOR-DASHBOARD'].put_nowait(None)
+    except:
+        pass
 
 async def generator(app):
     while True:

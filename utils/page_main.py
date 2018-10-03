@@ -10,7 +10,7 @@ RE_FINAL_SLASH = re.compile('(.*)\/$')
 RE_NO_SLASH = re.compile(r'([^\/]*)')
 
 def content_index(request, path):
-    path = os.path.join(request.app['PATH-GENERATE'], path, 'index.html')
+    path = os.path.join(request.app['PATH-GENERATE-ID'], path, 'index.html')
     if not os.path.isfile(path):
         return web.Response(text="File not available: {}, SRY, ¯\_(ツ)_/¯".format(path))
     with open(path, 'r') as content_file:
@@ -19,7 +19,7 @@ def content_index(request, path):
 
 
 def content_file(request, path):
-    path = os.path.join(request.app['PATH-GENERATE'], path)
+    path = os.path.join(request.app['PATH-GENERATE-ID'], path)
     if not os.path.isfile(path):
         return web.Response(text="File not available: {}, SRY, ¯\_(ツ)_/¯".format(path))
     with open(path, 'br') as content_file:

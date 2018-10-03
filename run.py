@@ -16,7 +16,8 @@ from aiohttp import web
 
 from utils import api_ping
 from utils import upload
-from utils import generator
+from utils import generator_id
+from utils import generator_dashboard
 from utils import journal
 from utils import gc
 from utils import page_main
@@ -49,6 +50,8 @@ def init_aiohttp(conf):
     app = web.Application(loop=loop)
     app["CONF"] = conf
     app['QUEUE'] = asyncio.Queue(maxsize=64)
+    # signals used for generating dashboard page
+    app['QUEUE-GENERATOR-DASHBOARD'] = asyncio.Queue(maxsize=64)
     app['LOOP'] = loop
     return app
 
@@ -67,7 +70,15 @@ async def handle_utilization(request):
         return web.Response(body=content, content_type='text/html')
 
 async def handle_index(request):
-    path = os.path.join(request.app['PATH-GENERATE'], 'index.html')
+    path = os.path.join(request.app['PATH-GENERATE-ID'], 'index.html')
+    if not os.path.isfile(path):
+        return web.Response(text="NO DATA YET - SRY")
+    with open(path, 'r') as content_file:
+        content = str.encode(content_file.read())
+        return web.Response(body=content, content_type='text/html')
+
+async def handle_dashboard(request):
+    path = os.path.join(request.app['PATH-GENERATE-DASHBOARD'], 'index.html')
     if not os.path.isfile(path):
         return web.Response(text="NO DATA YET - SRY")
     with open(path, 'r') as content_file:
@@ -75,12 +86,15 @@ async def handle_index(request):
         return web.Response(body=content, content_type='text/html')
 
 
+
 def setup_routes(app, conf):
     app.router.add_route('*', '/api/v1/ping', api_ping.handle)
     app.router.add_route('*', '/api/v1/upload', upload.handle)
     path_assets = os.path.join(app['PATH-TEMPLATES'], 'assets')
     app.router.add_static('/assets/', path_assets, show_index=True)
-    app.router.add_get('/', handle_index)
+    app.router.add_get('/', handle_dashboard)
+    app.router.add_get('/id', handle_index)
+    app.router.add_get('/dashboard', handle_dashboard)
     app.router.add_route('*', '/journal', page_journal.handle)
     app.router.add_route('*', '/disk-info', page_disk_info.handle)
     app.router.add_route('*', '/id/{path:.*}', page_main.handle)
@@ -98,7 +112,8 @@ def gc_exec(app):
     try:
         app['QUEUE'].put_nowait(None)
     except:
-        print("the generator was already informed, ignore it, no need to regenerate")
+        # print("the generator was already informed, ignore it, no need to regenerate")
+        pass
 
 
 def gc_majors_register(app):
@@ -183,12 +198,17 @@ def setup_db_path(app):
 
 
 def setup_page_dir(app):
-    app['PATH-GENERATE'] = os.path.join(app['PATH-DB'], "generated")
-    print('DB Generated: {}'.format(app['PATH-GENERATE']))
-    if os.path.exists(app['PATH-GENERATE']):
-        #print("remove generate_path first: {}".format(app['PATH-GENERATE']))
-        shutil.rmtree(app['PATH-GENERATE'])
-    os.makedirs(app['PATH-GENERATE'], exist_ok=True)
+    app['PATH-GENERATE-ID'] = os.path.join(app['PATH-DB'], "generated", 'id')
+    print('DB generated id/ directory: {}'.format(app['PATH-GENERATE-ID']))
+    if os.path.exists(app['PATH-GENERATE-ID']):
+        shutil.rmtree(app['PATH-GENERATE-ID'])
+    os.makedirs(app['PATH-GENERATE-ID'], exist_ok=True)
+
+    app['PATH-GENERATE-DASHBOARD'] = os.path.join(app['PATH-DB'], "generated", 'dashboard')
+    print('DB generated dashboard/ directory: {}'.format(app['PATH-GENERATE-DASHBOARD']))
+    if os.path.exists(app['PATH-GENERATE-DASHBOARD']):
+        shutil.rmtree(app['PATH-GENERATE-DASHBOARD'])
+    os.makedirs(app['PATH-GENERATE-DASHBOARD'], exist_ok=True)
 
 def setup_raw(app):
     app['PATH-RAW'] = os.path.join(app['PATH-DB'], "raw")
@@ -234,14 +254,15 @@ def setup_template_files(app):
 
     # now copy assets recursively
     src = os.path.join(app['PATH-TEMPLATES'], 'assets')
-    dst = app['PATH-GENERATE'] + '/assets'
+    dst = app['PATH-GENERATE-ID'] + '/assets'
     shutil.copytree(src, dst)
 
     #for filename in glob.glob(os.path.join(directory, '*.*')):
     #    shutil.copy(filename, app["CONF"]['page_dir'])
 
 def setup_generator(app):
-    app['LOOP'].create_task(generator.generator(app))
+    app['LOOP'].create_task(generator_id.generator(app))
+    app['LOOP'].create_task(generator_dashboard.generator(app))
 
 def main(conf):
     init_debug(conf)
