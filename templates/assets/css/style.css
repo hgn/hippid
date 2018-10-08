@@ -117,3 +117,17 @@ blockquote p {
   border-color: transparent;
   box-shadow: 0 0 0 3px rgba(255, 255, 255, .25);
 }
+
+
+#hippod-logo {
+	background-image:url("/assets/images/hippod-logo-100.png");
+	background-repeat:no-repeat;
+	position: absolute;
+	height: 400px;
+	width: 100%;
+	background-position: bottom 50px center;
+}
+
+#hippod-logo:hover {
+	background-image:url("/assets/images/hippod-logo-ear-100.png");
+}

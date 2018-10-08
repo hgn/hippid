@@ -16,7 +16,7 @@ def generate_dashboard_content(app):
 <div class="container-fluid">
 <div class="row">
 
-  <div class="col-4">
+  <div class="col-6">
 
 <div class="card border-light" style="max-width: 30rem;">
   <div class="card-header">
@@ -54,11 +54,11 @@ var myChart = new Chart(ctx, {
   </div>
 
 
-  <div class="col-4">
+  <div class="col-6">
 
 
 
-<div class="card border-light" style="max-width: 30rem;">
+<div class="card border-light" style="max-width: 60rem;">
   <div class="card-header">
 <h3 class="card-title">Test Status Over Time</h3>
   </div>
@@ -94,9 +94,6 @@ var myChart = new Chart(ctx, {
   </div>
 
 
-  </div>
-
-  <div class="col-4">
   </div>
 
 
