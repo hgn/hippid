@@ -39,9 +39,9 @@ var myChart = new Chart(ctx, {
         labels: ["Failed", "Passed", "Error"],
         datasets: [{
           backgroundColor: [
-            "#dc3545",
-            "#28a745",
-            "#17a2b8"
+            "rgba(183, 28, 28, .9)",
+            "rgba(27, 94, 32, .9)",
+            "rgba(1, 87, 155, .9)"
           ],
       data: [12, 19, 3]
     }]
@@ -74,15 +74,18 @@ var myChart = new Chart(ctx, {
     datasets: [{
       label: 'errors',
       data: [2, 4, 1, 4, 2, 3, 4],
-      backgroundColor: "#17a2b8"
+      backgroundColor: "rgba(1, 87, 155, .9)",
+      steppedLine: 'before'
     }, {
       label: 'passed',
       data: [2, 29, 5, 5, 2, 3, 10],
-      backgroundColor: "#28a745"
+      backgroundColor: "rgba(27, 94, 32, .9)",
+      steppedLine: 'before'
     }, {
       label: 'failed',
       data: [12, 19, 3, 17, 6, 3, 7],
-      backgroundColor: "#dc3545"
+      backgroundColor: "rgba(183, 28, 28, .9)",
+      steppedLine: 'before'
     }]
   }
 });
