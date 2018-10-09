@@ -69,7 +69,7 @@ async def handle_utilization(request):
         content = str.encode(content_file.read())
         return web.Response(body=content, content_type='text/html')
 
-async def handle_index(request):
+async def handle_id(request):
     path = os.path.join(request.app['PATH-GENERATE-ID'], 'index.html')
     if not os.path.isfile(path):
         return web.Response(text="NO DATA YET - SRY")
@@ -92,8 +92,8 @@ def setup_routes(app, conf):
     app.router.add_route('*', '/api/v1/upload', upload.handle)
     path_assets = os.path.join(app['PATH-TEMPLATES'], 'assets')
     app.router.add_static('/assets/', path_assets, show_index=True)
-    app.router.add_get('/', handle_dashboard)
-    app.router.add_get('/id', handle_index)
+    app.router.add_get('/', handle_id)
+    app.router.add_get('/id', handle_id)
     app.router.add_get('/dashboard', handle_dashboard)
     app.router.add_route('*', '/journal', page_journal.handle)
     app.router.add_route('*', '/disk-info', page_disk_info.handle)
