@@ -278,7 +278,8 @@ def main(conf):
     setup_gc_journal(app)
     setup_generator(app)
     port = conf['port'] if 'port' in conf else 8080
-    web.run_app(app, host="::", port=port)
+    host = conf['host'] if 'host' in conf else '0.0.0.0'
+    web.run_app(app, host=host, port=port)
 
 def parse_args():
     parser = argparse.ArgumentParser()

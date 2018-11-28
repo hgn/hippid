@@ -1,9 +1,9 @@
 [Unit]
-Description=HippiD - Collector Service
+Description=Hippo2D - Collector Service
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/python3 /usr/share/hippid/run.py -f /etc/hippid/hippid.conf
+ExecStart=/usr/bin/python3 /usr/share/hippo2d/run.py -f /etc/hippo2d/hippo2d.conf
 
 [Install]
 WantedBy=multi-user.target
