@@ -1,12 +1,12 @@
 MKFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 PROJ_SRC_PATH := $(notdir $(patsubst %/,%,$(dir $(MKFILE_PATH))))
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-EXEC_DIR := /usr/share/hippid
-CONF_DIR := /etc/hippid
+EXEC_DIR := /usr/share/hippo2d
+CONF_DIR := /etc/hippo2d
 
 
 help:
-	@echo "install - install distribution to /var/www/hippid and systemd unit file"
+	@echo "install - install distribution to /var/www/hippo2d and systemd unit file"
 
 all:
 	help
@@ -35,17 +35,17 @@ install:
 	else \
 		echo "create dir $(CONF_DIR)" ; \
 		mkdir -p $(CONF_DIR) ; \
-		cp $(ROOT_DIR)/assets/hippid.conf $(CONF_DIR)/ ; \
+		cp $(ROOT_DIR)/assets/hippo2d.conf $(CONF_DIR)/ ; \
 	fi
 	mkdir -p $(EXEC_DIR)
 	cp -r $(ROOT_DIR)/* $(EXEC_DIR)
-	cp assets/hippid.service /lib/systemd/system/
-	chmod 644 /lib/systemd/system/hippid.service
+	cp assets/hippo2d.service /lib/systemd/system/
+	chmod 644 /lib/systemd/system/hippo2d.service
 	@echo "now call systemctl daemon-reload"
-	@echo ".. enable service via: systemctl enable hippid"
-	@echo ".. start service via: systemctl start hippid"
-	@echo ".. status via: systemctl status hippid"
-	@echo ".. logging via: journalctl -u hippid"
+	@echo ".. enable service via: systemctl enable hippo2d"
+	@echo ".. start service via: systemctl start hippo2d"
+	@echo ".. status via: systemctl status hippo2d"
+	@echo ".. logging via: journalctl -u hippo2d"
 	@echo ""
 	@echo "Don't forget to install required python modules (for root): \"sudo -H pip3 install -r requirements.txt\""
 	@echo "and \"sudo apt-get install python3-pip libsasl2-dev pandoc texlive-xetex texlive-latex-extra texlive-latex-recommended libldap-dev\""
