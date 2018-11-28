@@ -222,7 +222,7 @@ def setup_template_files(app):
     else:
         app['PATH-TEMPLATES'] = app["CONF"]['template_dir']
     if not os.path.exists(app['PATH-TEMPLATES']):
-        raise('templates_dir does not exists, check your config')
+        raise Exception('templates_dir ({})does not exists, check your config'.format(app['PATH-TEMPLATES']))
     # read header and footer
     full = os.path.join(app['PATH-TEMPLATES'], 'header.html')
     with open(full, 'r') as fd:
