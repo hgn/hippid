@@ -277,7 +277,8 @@ def main(conf):
     setup_gc_majors(app)
     setup_gc_journal(app)
     setup_generator(app)
-    web.run_app(app, host="::", port=8080)
+    port = conf['port'] if 'port' in conf else 8080
+    web.run_app(app, host="::", port=port)
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -296,6 +297,7 @@ def parse_args():
 def load_configuration_file(args):
     config = dict()
     exec(open(args.configuration).read(), config)
+    config.pop("__builtins__")
     return config
 
 def configuration_check(conf):
