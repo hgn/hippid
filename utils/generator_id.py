@@ -16,6 +16,18 @@ extensions = ['markdown.extensions.tables', 'fenced_code', 'nl2br']
 def hippid_date_parse(string):
     return datetime.datetime.strptime(string, '%Y-%m-%dT%H:%M:%S.%f')
 
+def human_timedelta(seconds):
+    ''' return s a human readable timedelta'''
+    days, rem = divmod(seconds, 86400)
+    hours, rem = divmod(rem, 3600)
+    minutes, seconds = divmod(rem, 60)
+    if seconds < 1:
+        seconds = 1
+    locals_ = locals()
+    magnitudes_str = ("{n} {magnitude}".format(n=int(locals_[magnitude]), magnitude=magnitude)
+            for magnitude in ("days", "hours", "minutes", "seconds") if locals_[magnitude])
+    return ", ".join(magnitudes_str)
+
 def human_date_delta(date):
     diff = datetime.datetime.utcnow() - date
     s = diff.seconds
@@ -222,8 +234,11 @@ def generate_sidebar_graph(app, major_id, meta_test):
 
 def generate_sidebar_top(app, major_id, meta_test, path_full):
     meta_data = meta_own(app, path_full)
-    modified_last = hippid_date_parse(meta_data['time-last']).strftime('%Y-%m-%d %H:%M')
-    modified_first = hippid_date_parse(meta_data['time-first']).strftime('%Y-%m-%d %H:%M')
+    modified_first_raw = hippid_date_parse(meta_data['time-first'])
+    modified_last_raw = hippid_date_parse(meta_data['time-last'])
+    modified_last = modified_last_raw.strftime('%Y-%m-%d %H:%M')
+    modified_first = modified_first_raw.strftime('%Y-%m-%d %H:%M')
+    human_timedelta_str = human_timedelta((modified_last_raw - modified_first_raw).total_seconds())
     submitter_last = meta_data['submitters'][-1]['name']
     submitter_no = len(meta_data['submitters'])
     submitter_names = list(set([i['name'] for i in meta_data['submitters']]))
@@ -231,6 +246,7 @@ def generate_sidebar_top(app, major_id, meta_test, path_full):
     html  = '<ul>'
     html += '<li>Last Modified: {}</li>'.format(modified_last)
     html += '<li>First Uploaded: {}</li>'.format(modified_first)
+    html += '<li>Time in Between: {}</li>'.format(human_timedelta_str)
     html += '<li>Last Submitter: {}</li>'.format(submitter_last)
     html += '<li>Number of Submits: {}</li>'.format(submitter_no)
     html += '<li>Number of Submitters: {}</li>'.format(len(submitter_names))
