@@ -223,7 +223,7 @@ def generate_sidebar_graph(app, major_id, meta_test):
 def generate_sidebar_top(app, major_id, meta_test, path_full):
     meta_data = meta_own(app, path_full)
     modified_last = hippid_date_parse(meta_data['time-last']).strftime('%Y-%m-%d %H:%M')
-    modified_first = hippid_date_parse(meta_data['time-last']).strftime('%Y-%m-%d %H:%M')
+    modified_first = hippid_date_parse(meta_data['time-first']).strftime('%Y-%m-%d %H:%M')
     submitter_last = meta_data['submitters'][-1]['name']
     submitter_no = len(meta_data['submitters'])
     submitter_names = list(set([i['name'] for i in meta_data['submitters']]))
@@ -234,7 +234,7 @@ def generate_sidebar_top(app, major_id, meta_test, path_full):
     html += '<li>Last Submitter: {}</li>'.format(submitter_last)
     html += '<li>Number of Submits: {}</li>'.format(submitter_no)
     html += '<li>Number of Submitters: {}</li>'.format(len(submitter_names))
-    html += '<li>Submitter Names: {}</li>'.format(", ".join(submitter_names))
+    html += '<li>Submitter: {}</li>'.format(", ".join(submitter_names))
     html += '</ul>'
 
     html += generate_sidebar_graph(app, major_id, meta_test)
