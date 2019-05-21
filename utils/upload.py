@@ -87,6 +87,15 @@ def update_meta_data(obj, major_path):
     with open(path, 'w') as fd:
         fd.write(dj)
 
+    for object_ in obj['majors']:
+        if 'alias.attribute' == object_['name']:
+            path = os.path.join(major_path, PATH_META_FOREIGN, 'alias.attribute')
+            d = dict()
+            d['name'] =  object_['content']
+            dj = json.dumps(d, sort_keys=True, separators=(',', ': '))
+            with open(path, 'w') as fd:
+                fd.write(dj)
+
 def process_major_entry(request, obj, major_path, existing=True):
     if existing == False:
         os.makedirs(major_path, exist_ok=True)

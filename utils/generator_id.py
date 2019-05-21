@@ -4,12 +4,12 @@ import markdown
 import shutil
 import datetime
 import json
+import types
 
 from utils import journal
 from utils.upload import PATH_META_SELF
+from utils.upload import PATH_META_FOREIGN
 
-#= '.meta/self'
-PATH_META_FOREIGN = '.meta/foreign'
 
 extensions = ['markdown.extensions.tables', 'fenced_code', 'nl2br']
 
@@ -100,6 +100,16 @@ def meta_own(app, full):
     with open(path_meta_self_file) as f:
         return json.load(f)
 
+def attribute_read(app, full):
+    d = types.SimpleNamespace()
+    d.alias = ' '
+    path_alias_attribute = os.path.join(full, PATH_META_FOREIGN, 'alias.attribute')
+    if os.path.isfile(path_alias_attribute):
+        with open(path_alias_attribute) as f:
+            jd = json.load(f)
+            d.alias = jd['name']
+    return d
+
 def create_id_list(app):
     ''' return a sorted object based list of id's with meta-data'''
     ret_list = list()
@@ -109,10 +119,12 @@ def create_id_list(app):
             continue
         ret = lambda: None # functions are objets too
         meta_data = meta_own(app, full)
+        attribute_data = attribute_read(app, full)
         ret.modified_last = hippid_date_parse(meta_data['time-last'])
         ret.modified_first = hippid_date_parse(meta_data['time-first'])
         ret.submitter_last = meta_data['submitters'][-1]['name']
         ret.id = major_id
+        ret.alias = attribute_data.alias
         ret.meta_test = analyze_meta_test(major_id, full)
         create_id_insert(ret_list, ret)
     return ret_list
@@ -124,6 +136,7 @@ def generate_index_table(app):
     for entity in create_id_list(app):
         tbl += '<tr>'
         tbl += '<td><a href="id/' + entity.id + '/">' + entity.id + '</a></td>'
+        tbl += '<td>' + entity.alias +'</td>'
         tbl += '<td>' + entity.modified_last.strftime('%Y-%m-%d %H:%M') + ' ('
         tbl +=          human_date_delta(entity.modified_last) + ')</td>'
         tbl += '<td>' + entity.modified_first.strftime('%Y-%m-%d %H:%M') + ' ('
@@ -377,6 +390,7 @@ TBL_HEAD = '''
   <thead>
     <tr>
       <th scope="col">ID</th>
+      <th scope="col">Alias</th>
       <th scope="col">Last Modified</th>
       <th scope="col">First Uploaded</th>
       <th scope="col">Status</th>

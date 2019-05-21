@@ -82,3 +82,13 @@ files. These have a special meaning.
 > ordinary identifer. All other child identifiers are allowed. To reference a
 > deeply nested child element the particular entry-name must be constructed with
 > slashes too. E.g. `00110/010.md`.
+
+# Developer
+
+## Difference between Metadata and Attributes
+
+Metadata are data that are always transmitted to the main data. E.g. the user/
+submitter name is meta data. Similar to the transmission time.
+
+Attributes on the other hand are main data elements beside the content. Data
+like an alias name, or the test result. Attributes can have metadata.
