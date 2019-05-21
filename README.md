@@ -1,5 +1,14 @@
 # HippiD
 
+## Installation
+
+```
+sudo pip3 install -r requirements.txt
+sudo make install
+```
+
+## Behind the Scenes
+
 - *level 1* reflect a particular version of a software/component. This can be
 	any string, but version string is probably the most sensible. E.g. `v1.2.3`,
 	`v101`, `7.6.5`, `v1.2.3-23-username` or just a commit id:
