@@ -98,7 +98,7 @@ def create_id_list(app):
         ret = lambda: None # functions are objets too
         meta_data = meta_own(app, full)
         ret.modified_last = hippid_date_parse(meta_data['time-last'])
-        ret.modified_first = hippid_date_parse(meta_data['time-last'])
+        ret.modified_first = hippid_date_parse(meta_data['time-first'])
         ret.submitter_last = meta_data['submitters'][-1]['name']
         ret.id = major_id
         ret.meta_test = analyze_meta_test(major_id, full)
@@ -114,7 +114,8 @@ def generate_index_table(app):
         tbl += '<td><a href="id/' + entity.id + '/">' + entity.id + '</a></td>'
         tbl += '<td>' + entity.modified_last.strftime('%Y-%m-%d %H:%M') + ' ('
         tbl +=          human_date_delta(entity.modified_last) + ')</td>'
-        tbl += '<td>' + entity.modified_first.strftime('%Y-%m-%d %H:%M') + '</td>'
+        tbl += '<td>' + entity.modified_first.strftime('%Y-%m-%d %H:%M') + ' ('
+        tbl +=          human_date_delta(entity.modified_first) + ')</td>'
         tbl += '<td>' + meta_test_htmlize(entity.meta_test) +'</td>'
         tbl += '<td>' + entity.submitter_last +'</td>'
         tbl += '</tr>'
@@ -231,7 +232,8 @@ def generate_sidebar_top(app, major_id, meta_test, path_full):
     html += '<li>Last Modified: {}</li>'.format(modified_last)
     html += '<li>First Uploaded: {}</li>'.format(modified_first)
     html += '<li>Last Submitter: {}</li>'.format(submitter_last)
-    html += '<li>Number of Submitters: {}</li>'.format(submitter_no)
+    html += '<li>Number of Submits: {}</li>'.format(submitter_no)
+    html += '<li>Number of Submitters: {}</li>'.format(len(submitter_names))
     html += '<li>Submitter Names: {}</li>'.format(", ".join(submitter_names))
     html += '</ul>'
 
@@ -360,7 +362,7 @@ TBL_HEAD = '''
     <tr>
       <th scope="col">ID</th>
       <th scope="col">Last Modified</th>
-      <th scope="col">First Modified</th>
+      <th scope="col">First Uploaded</th>
       <th scope="col">Status</th>
       <th scope="col">Last Submitter</th>
     </tr>

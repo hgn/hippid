@@ -73,6 +73,7 @@ def update_meta_data(obj, major_path):
     d['time-last'] = now
     submitter = dict()
     submitter['name'] = obj['submitter']
+    submitter['date'] = now
     d['submitters'].append(submitter)
     dj = json.dumps(d, sort_keys=True, separators=(',', ': '))
     with open(path, 'w') as fd:
