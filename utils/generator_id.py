@@ -8,7 +8,7 @@ import types
 
 from utils import journal
 from utils.upload import PATH_META_SELF
-from utils.upload import PATH_META_FOREIGN
+from utils.upload import PATH_ATTRIBUTES
 
 
 extensions = ['markdown.extensions.tables', 'fenced_code', 'nl2br']
@@ -95,22 +95,41 @@ def meta_test_htmlize(d):
     html += '<a href="#" data-toggle="tooltip" title="Test error within test system"> <span class="badge badge-info">{}</span>  </a>'.format(len(d['error']))
     return html
 
-def meta_own(app, full):
-    path_meta_self_file = os.path.join(full, PATH_META_SELF,  'meta.json')
+def meta_data_load(app, full):
+    path_meta_self_file = os.path.join(full, PATH_META_SELF,  'access.json')
     with open(path_meta_self_file) as f:
         return json.load(f)
 
-def attribute_read(app, full):
+
+def attributes_data_load(path_major_id):
+    """
+    Return attribute data for a entry, if not available
+    the default is returned
+    """
     d = types.SimpleNamespace()
-    d.alias = ' '
-    path_alias_attribute = os.path.join(full, PATH_META_FOREIGN, 'alias.attribute')
-    if os.path.isfile(path_alias_attribute):
-        with open(path_alias_attribute) as f:
+
+    # Attribute: alias
+    path = os.path.join(path_major_id, PATH_ATTRIBUTES, 'alias.json')
+    try:
+        with open(path) as f:
             jd = json.load(f)
             d.alias = jd['name']
+    except IOError:
+        d.alias = ' '
+
+    # Attribute: lifetime
+    path = os.path.join(path_major_id, PATH_ATTRIBUTES, 'lifetime.json')
+    try:
+        with open(path) as f:
+            jd = json.load(f)
+            d.lifetime = jd['name']
+    except IOError:
+        d.lifetime = 'standard'
+
     return d
 
-def create_id_list(app):
+
+def create_meta_attribute_list(app):
     ''' return a sorted object based list of id's with meta-data'''
     ret_list = list()
     for major_id in os.listdir(app['PATH-RAW']):
@@ -118,8 +137,8 @@ def create_id_list(app):
         if not os.path.isdir(full):
             continue
         ret = lambda: None # functions are objets too
-        meta_data = meta_own(app, full)
-        attribute_data = attribute_read(app, full)
+        meta_data = meta_data_load(app, full)
+        attribute_data = attributes_data_load(full)
         ret.modified_last = hippid_date_parse(meta_data['time-last'])
         ret.modified_first = hippid_date_parse(meta_data['time-first'])
         ret.submitter_last = meta_data['submitters'][-1]['name']
@@ -132,8 +151,7 @@ def create_id_list(app):
 
 def generate_index_table(app):
     tbl = TBL_HEAD
-    create_id_list(app)
-    for entity in create_id_list(app):
+    for entity in create_meta_attribute_list(app):
         tbl += '<tr>'
         tbl += '<td><a href="id/' + entity.id + '/">' + entity.id + '</a></td>'
         tbl += '<td>' + entity.alias +'</td>'
@@ -246,7 +264,7 @@ def generate_sidebar_graph(app, major_id, meta_test):
     return html
 
 def generate_sidebar_top(app, major_id, meta_test, path_full):
-    meta_data = meta_own(app, path_full)
+    meta_data = meta_data_load(app, path_full)
     modified_first_raw = hippid_date_parse(meta_data['time-first'])
     modified_last_raw = hippid_date_parse(meta_data['time-last'])
     modified_last = modified_last_raw.strftime('%Y-%m-%d %H:%M')

@@ -101,10 +101,13 @@ def setup_routes(app, conf):
 
 
 def gc_purge_outdated(app):
-    gc_major_lifetime_max = 60 * 60 * 24 * 7 * 52
-    if 'gc_major_lifetime_max' in app['CONF']:
-        gc_major_lifetime_max = app['CONF']['gc_major_lifetime_max']
-    gc.run(app, gc_major_lifetime_max)
+    gc_major_lifetime_standard = 60 * 60 * 24 * 7 * 52
+    if 'gc_major_lifetime_standard' in app['CONF']:
+        gc_major_lifetime_standard = app['CONF']['gc_major_lifetime_standard']
+    gc_major_lifetime_extended = 2 * 60 * 60 * 24 * 7 * 52
+    if 'gc_major_lifetime_extended' in app['CONF']:
+        gc_major_lifetime_max = app['CONF']['gc_major_lifetime_extended']
+    gc.run(app, gc_major_lifetime_standard, gc_major_lifetime_extended)
 
 
 def gc_exec(app):

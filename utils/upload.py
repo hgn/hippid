@@ -13,8 +13,8 @@ from utils import journal
 import aiohttp
 
 
-PATH_META_SELF = '.meta/self'
-PATH_META_FOREIGN = '.meta/foreign'
+PATH_META_SELF = '.meta'
+PATH_ATTRIBUTES = '.attributes'
 
 
 def timestr():
@@ -33,15 +33,15 @@ def save_meta_data_existing(obj, major_path):
 def save_meta_data_create_dir(major_path):
     path_self_dir = os.path.join(major_path, PATH_META_SELF)
     os.makedirs(path_self_dir, exist_ok=False)
-    path_forgein_dir = os.path.join(major_path, PATH_META_FOREIGN)
+    path_forgein_dir = os.path.join(major_path, PATH_ATTRIBUTES)
     os.makedirs(path_forgein_dir, exist_ok=False)
-    return path_self_dir, path_forgein_dir
+    return path_self_dir
 
 
-def save_meta_data(obj, major_path):
-    """ meta-own.json and meta-foreign.json """
-    path_self_dir, path_foreign_dir = save_meta_data_create_dir(major_path)
-    path_self_file = os.path.join(path_self_dir, 'meta.json')
+def meta_data_init(obj, major_path):
+    os.makedirs(major_path, exist_ok=True)
+    path_meta_data = save_meta_data_create_dir(major_path)
+    path_self_file = os.path.join(path_meta_data, 'access.json')
     d = dict()
     now = timestr()
     d['time-first'] = now
@@ -55,18 +55,10 @@ def save_meta_data(obj, major_path):
     with open(path_self_file, 'w') as fd:
         fd.write(dj)
 
-    path_foreign_file = os.path.join(path_foreign_dir, 'meta.json')
-    d = dict()
-    # FIXME: check key existins
-    d['lifetime-group'] = obj['meta']['lifetime-group']
-    dj = json.dumps(d, sort_keys=True, separators=(',', ': '))
-    with open(path_foreign_file, 'w') as fd:
-        fd.write(dj)
 
-
-def update_meta_data(obj, major_path):
+def meta_data_update(obj, major_path):
     """ meta-own.json and meta-foreign.json """
-    path = os.path.join(major_path, PATH_META_SELF, 'meta.json')
+    path = os.path.join(major_path, PATH_META_SELF, 'access.json')
     with open(path) as f:
         d = json.load(f)
     now = timestr()
@@ -79,30 +71,35 @@ def update_meta_data(obj, major_path):
     with open(path, 'w') as fd:
         fd.write(dj)
 
-    path = os.path.join(major_path, PATH_META_FOREIGN, 'meta.json')
-    d = dict()
-    # FIXME: check key existins
-    d['lifetime-group'] = obj['meta']['lifetime-group']
-    dj = json.dumps(d, sort_keys=True, separators=(',', ': '))
-    with open(path, 'w') as fd:
-        fd.write(dj)
-
+def update_attributes(obj, major_path):
     for object_ in obj['majors']:
-        if 'alias.attribute' == object_['name']:
-            path = os.path.join(major_path, PATH_META_FOREIGN, 'alias.attribute')
+        if not 'type' in object_:
+            continue
+        if object_['type'] != 'attribute':
+            continue
+
+        # ok, only attributes from here on
+        if object_['name'] == 'alias':
+            path = os.path.join(major_path, PATH_ATTRIBUTES, 'alias.json')
+            d = dict()
+            d['name'] =  object_['content']
+            dj = json.dumps(d, sort_keys=True, separators=(',', ': '))
+            with open(path, 'w') as fd:
+                fd.write(dj)
+        elif object_['name'] == 'lifetime':
+            path = os.path.join(major_path, PATH_ATTRIBUTES, 'lifetime.json')
             d = dict()
             d['name'] =  object_['content']
             dj = json.dumps(d, sort_keys=True, separators=(',', ': '))
             with open(path, 'w') as fd:
                 fd.write(dj)
 
-def process_major_entry(request, obj, major_path, existing=True):
-    if existing == False:
-        os.makedirs(major_path, exist_ok=True)
-        save_meta_data(obj, major_path)
-    else:
-        update_meta_data(obj, major_path)
+
+def update_blobs(request, obj, major_path, existing):
     for major in obj['majors']:
+        if 'type' in major and major['type'] == 'attribute':
+            # not handled here, ignore early
+            continue
         path = os.path.join(major_path, major['name'])
         content = major['content']
         mode = 'w'
@@ -115,6 +112,14 @@ def process_major_entry(request, obj, major_path, existing=True):
             os.makedirs(dirname, exist_ok=True)
         with open(path, mode) as fd:
             fd.write(content)
+
+def process_major_entry(request, obj, major_path, existing=True):
+    if existing == False:
+        meta_data_init(obj, major_path)
+    else:
+        meta_data_update(obj, major_path)
+    update_attributes(obj, major_path)
+    update_blobs(request, obj, major_path, existing)
     request.app['QUEUE'].put_nowait(["MAJOR", obj['major-id']])
     return aiohttp.web.Response(text="All right!")
 
