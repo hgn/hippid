@@ -65,7 +65,7 @@ def analyze_meta_test(major_id, full_path):
     d['error'] = list()
     for path, subdirs, files in os.walk(full_path):
         for name in files:
-            if name != "main.meta":
+            if name != "attribute.test-status":
                 continue
             url = path[len(full_path) + 1:] + '/'
             filepath = os.path.join(path, name)
