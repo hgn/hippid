@@ -58,11 +58,31 @@ def create_id_insert(object_list, new):
             return
     object_list.append(new)
 
+def analyze_meta_test_filter(entries):
+    """
+    Only leaf nodes may have test status. If a tree
+    has multiple results on the hierarchy path only
+    the leaf is returned. All others are filterd (ignored)
+    """
+    retdata = dict()
+    retdata['passed'] = list()
+    retdata['failed'] = list()
+    retdata['error'] = list()
+    for entry in entries:
+        if not entry['type'] == 'test':
+            continue
+        if entry['status'] == 'passed':
+            retdata['passed'].append(entry)
+        if entry['status'] == 'error':
+            retdata['error'].append(entry)
+        if entry['status'] == 'failed':
+            retdata['failed'].append(entry)
+
+    return retdata
+
+
 def analyze_meta_test(major_id, full_path):
-    d = dict()
-    d['passed'] = list()
-    d['failed'] = list()
-    d['error'] = list()
+    entries = list()
     for path, subdirs, files in os.walk(full_path):
         for name in files:
             if name != "attribute.test-status":
@@ -71,23 +91,11 @@ def analyze_meta_test(major_id, full_path):
             filepath = os.path.join(path, name)
             with open(filepath) as fd:
                 meta_test_data = json.load(fd)
-            meta_test_data['type'] == 'test'
-            if meta_test_data['status'] == 'passed':
-                entry = dict()
-                entry['path'] = path
-                entry['url'] = url
-                d['passed'].append(entry)
-            if meta_test_data['status'] == 'error':
-                entry = dict()
-                entry['path'] = path
-                entry['url'] = url
-                d['error'].append(entry)
-            if meta_test_data['status'] == 'failed':
-                entry = dict()
-                entry['path'] = path
-                entry['url'] = url
-                d['failed'].append(entry)
-    return d
+            meta_test_data['path'] = path
+            meta_test_data['url'] = url
+            entries.append(meta_test_data)
+    return analyze_meta_test_filter(entries)
+
 
 def meta_test_htmlize(d):
     html  = '<a href="#" data-toggle="tooltip" title="Failed test, SHOULD be fixed"> <span class="badge badge-danger">{}</span> </a>'.format(len(d['failed']))
