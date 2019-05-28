@@ -83,6 +83,94 @@ files. These have a special meaning.
 > deeply nested child element the particular entry-name must be constructed with
 > slashes too. E.g. `00110/010.md`.
 
+# Database Structure
+
+## Saved Raw Data
+
+```
+└── raw
+    └── 3493923932
+        ├── 0001
+        │   ├── 0001
+        │   │   ├── 0001
+        │   │   │   ├── 0001
+        │   │   │   │   ├── 001.md
+        │   │   │   │   ├── 002.md
+        │   │   │   │   ├── 003.md
+        │   │   │   │   ├── 100.md
+        │   │   │   │   ├── attribute.test-status
+        │   │   │   │   └── graph.png
+        │   │   │   ├── 001.md
+        │   │   │   ├── 002.md
+        │   │   │   ├── 003.md
+        │   │   │   ├── 004.md
+        │   │   │   ├── 100.md
+        │   │   │   ├── attribute.test-status
+        │   │   │   └── graph.png
+        │   │   ├── 001.md
+        │   │   ├── 002.md
+        │   │   ├── 003.md
+        │   │   ├── 004.md
+        │   │   ├── 100.md
+        │   │   └── graph.png
+        │   ├── 001.md
+        │   ├── 002.md
+        │   ├── 003.md
+        │   ├── 004.md
+        │   ├── 100.md
+        │   └── graph.png
+        ├── 001.md
+        ├── 002.md
+        ├── 003.md
+        ├── 100.md
+        ├── .attributes
+        │   └── alias.json
+        ├── graph.png
+        └── .meta
+            └── access.json
+```
+
+## Generated Data
+
+```
+├── generated
+│   ├── dashboard
+│   │   └── index.html
+│   └── id
+│       ├── 3493923932
+│       │   ├── 0001
+│       │   │   ├── 0001
+│       │   │   │   ├── 0001
+│       │   │   │   │   ├── 0001
+│       │   │   │   │   │   ├── attribute.test-status
+│       │   │   │   │   │   ├── graph.png
+│       │   │   │   │   │   └── index.html
+│       │   │   │   │   ├── attribute.test-status
+│       │   │   │   │   ├── graph.png
+│       │   │   │   │   └── index.html
+│       │   │   │   ├── graph.png
+│       │   │   │   └── index.html
+│       │   │   ├── graph.png
+│       │   │   └── index.html
+│       │   ├── graph.png
+│       │   └── index.html
+│       └── index.html
+```
+
+
+## REST Info Data
+
+`/api/v1/info/<id>`
+
+```
+{
+ 'passed' : 2,
+ 'failed' : 0,
+ 'error' : 0
+}
+```
+
+
 # Developer
 
 ## Difference between Metadata and Attributes
