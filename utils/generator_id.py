@@ -332,6 +332,8 @@ def generate_major_page(app, major_id, src_path, dst_path, level_one=True):
     index += app['BLOB-ID-MAIN-HEADER']
     for filename in sorted(os.listdir(src_path)):
         full = os.path.join(src_path, filename)
+        if full.endswith('.attributes') or full.endswith('.meta'):
+            continue
         if os.path.isdir(full):
             # do it recursevily
             src_path_tmp = os.path.join(src_path, filename)
