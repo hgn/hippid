@@ -164,9 +164,118 @@ files. These have a special meaning.
 
 ```
 {
- 'passed' : 2,
- 'failed' : 0,
- 'error' : 0
+  "name": "3493923932",
+  "type": "directory",
+  "children": [
+    {
+      "name": "index.html",
+      "type": "file",
+      "path": "/index.html",
+      "size": "6158",
+      "content-type": "text/html"
+    },
+    {
+      "name": "graph.png",
+      "type": "file",
+      "path": "/graph.png",
+      "size": "118602",
+      "content-type": "image/png"
+    },
+    {
+      "name": "0001",
+      "type": "directory",
+      "children": [
+        {
+          "name": "index.html",
+          "type": "file",
+          "path": "/0001/index.html",
+          "size": "3509",
+          "content-type": "text/html"
+        },
+        {
+          "name": "graph.png",
+          "type": "file",
+          "path": "/0001/graph.png",
+          "size": "118602",
+          "content-type": "image/png"
+        },
+        {
+          "name": "0001",
+          "type": "directory",
+          "children": [
+            {
+              "name": "index.html",
+              "type": "file",
+              "path": "/0001/0001/index.html",
+              "size": "3507",
+              "content-type": "text/html"
+            },
+            {
+              "name": "graph.png",
+              "type": "file",
+              "path": "/0001/0001/graph.png",
+              "size": "118602",
+              "content-type": "image/png"
+            },
+            {
+              "name": "0001",
+              "type": "directory",
+              "children": [
+                {
+                  "name": "attribute.test-status",
+                  "type": "file",
+                  "path": "/0001/0001/0001/attribute.test-status",
+                  "size": "35",
+                  "content-type": "binary/octet-stream"
+                },
+                {
+                  "name": "index.html",
+                  "type": "file",
+                  "path": "/0001/0001/0001/index.html",
+                  "size": "3509",
+                  "content-type": "text/html"
+                },
+                {
+                  "name": "graph.png",
+                  "type": "file",
+                  "path": "/0001/0001/0001/graph.png",
+                  "size": "118602",
+                  "content-type": "image/png"
+                },
+                {
+                  "name": "0001",
+                  "type": "directory",
+                  "children": [
+                    {
+                      "name": "attribute.test-status",
+                      "type": "file",
+                      "path": "/0001/0001/0001/0001/attribute.test-status",
+                      "size": "35",
+                      "content-type": "binary/octet-stream"
+                    },
+                    {
+                      "name": "index.html",
+                      "type": "file",
+                      "path": "/0001/0001/0001/0001/index.html",
+                      "size": "3437",
+                      "content-type": "text/html"
+                    },
+                    {
+                      "name": "graph.png",
+                      "type": "file",
+                      "path": "/0001/0001/0001/0001/graph.png",
+                      "size": "118602",
+                      "content-type": "image/png"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
 }
 ```
 
