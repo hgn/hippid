@@ -5,6 +5,7 @@ import shutil
 import datetime
 import json
 import types
+import mimetypes
 
 from utils import journal
 from utils.upload import PATH_META_SELF
@@ -333,11 +334,17 @@ def path_to_dict(path, path_strip_len):
     else:
         d['type'] = "file"
         d['path'] = path[path_strip_len:]
+        d['size'] = str(os.path.getsize(path))
+        d['content-type'], _ = mimetypes.guess_type(path)
+        if d['content-type'] is None:
+            # default to octet-stream for unknown data
+            d['content-type'] = "binary/octet-stream"
     return d
 
 def generate_machine_listing(app, id_, path):
     jdata = json.dumps(path_to_dict(path, len(path)), indent=2, separators=(',', ': '))
     print(jdata)
+
 
 def generate_major_page(app, major_id, src_path, dst_path, level_one=True):
     os.makedirs(dst_path, exist_ok=True)
