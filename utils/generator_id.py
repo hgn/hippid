@@ -285,7 +285,7 @@ def generate_sidebar_top(app, major_id, meta_test, path_full):
     html  = '<ul>'
     html += '<li>Last Modified: {}</li>'.format(modified_last)
     html += '<li>First Uploaded: {}</li>'.format(modified_first)
-    html += '<li>Time in Between: {}</li>'.format(human_timedelta_str)
+    html += '<li>Time between Updates: {}</li>'.format(human_timedelta_str)
     html += '<li>Last Submitter: {}</li>'.format(submitter_last)
     html += '<li>Number of Submits: {}</li>'.format(submitter_no)
     html += '<li>Number of Submitters: {}</li>'.format(len(submitter_names))
@@ -325,6 +325,19 @@ def generate_sidebar(app, major_id):
             len(meta_test['passed']), passed_htmlized,
             len(meta_test['error']), error_htmlized)
 
+def path_to_dict(path, path_strip_len):
+    d = {'name': os.path.basename(path)}
+    if os.path.isdir(path):
+        d['type'] = "directory"
+        d['children'] = [path_to_dict(os.path.join(path, x), path_strip_len) for x in os.listdir(path)]
+    else:
+        d['type'] = "file"
+        d['path'] = path[path_strip_len:]
+    return d
+
+def generate_machine_listing(app, id_, path):
+    jdata = json.dumps(path_to_dict(path, len(path)), indent=2, separators=(',', ': '))
+    print(jdata)
 
 def generate_major_page(app, major_id, src_path, dst_path, level_one=True):
     os.makedirs(dst_path, exist_ok=True)
@@ -333,6 +346,7 @@ def generate_major_page(app, major_id, src_path, dst_path, level_one=True):
     for filename in sorted(os.listdir(src_path)):
         full = os.path.join(src_path, filename)
         if full.endswith('.attributes') or full.endswith('.meta'):
+            # this files must not be copied
             continue
         if os.path.isdir(full):
             # do it recursevily
@@ -364,6 +378,11 @@ def generate_major_page(app, major_id, src_path, dst_path, level_one=True):
     index_file_path = os.path.join(dst_path, 'index.html')
     with open(index_file_path, 'w') as fd:
         fd.write(index)
+
+    if level_one is True:
+        # for the root level we generate a json machine
+        # representation.
+        generate_machine_listing(app, major_id, dst_path)
 
 def generate_all(app):
     # FIXME: this is just a short hack to get the
