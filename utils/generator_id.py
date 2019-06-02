@@ -326,23 +326,26 @@ def generate_sidebar(app, major_id):
             len(meta_test['passed']), passed_htmlized,
             len(meta_test['error']), error_htmlized)
 
-def path_to_dict(path, path_strip_len):
+def path_to_dict(path, path_strip_len, id_):
     d = {'name': os.path.basename(path)}
     if os.path.isdir(path):
         d['type'] = "directory"
-        d['children'] = [path_to_dict(os.path.join(path, x), path_strip_len) for x in os.listdir(path)]
+        d['children'] = [path_to_dict(os.path.join(path, x), path_strip_len, id_) for x in os.listdir(path)]
     else:
         d['type'] = "file"
-        d['path'] = path[path_strip_len:]
+        d['path'] = 'id/{}{}'.format(id_, path[path_strip_len:])
         d['size'] = str(os.path.getsize(path))
         d['content-type'], _ = mimetypes.guess_type(path)
-        if d['content-type'] is None:
-            # default to octet-stream for unknown data
+        if os.path.basename(path).startswith('attribute.'):
+            # default to octet-stream for unknown data BUT if it is an
+            # attribute, it MUST be JSON
+            d['content-type'] = 'application/json'
+        elif d['content-type'] is None:
             d['content-type'] = "binary/octet-stream"
     return d
 
 def generate_machine_listing(app, id_, path):
-    jdata = json.dumps(path_to_dict(path, len(path)), indent=2, separators=(',', ': '))
+    jdata = json.dumps(path_to_dict(path, len(path), id_), indent=2, separators=(',', ': '))
     print(jdata)
 
 
