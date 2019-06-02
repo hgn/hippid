@@ -326,6 +326,7 @@ def generate_sidebar(app, major_id):
             len(meta_test['passed']), passed_htmlized,
             len(meta_test['error']), error_htmlized)
 
+
 def path_to_dict(path, path_strip_len, id_):
     d = {'name': os.path.basename(path)}
     if os.path.isdir(path):
@@ -344,9 +345,10 @@ def path_to_dict(path, path_strip_len, id_):
             d['content-type'] = "binary/octet-stream"
     return d
 
+
 def generate_machine_listing(app, id_, path):
     jdata = json.dumps(path_to_dict(path, len(path), id_), indent=2, separators=(',', ': '))
-    print(jdata)
+    return jdata
 
 
 def generate_major_page(app, major_id, src_path, dst_path, level_one=True):
@@ -391,8 +393,11 @@ def generate_major_page(app, major_id, src_path, dst_path, level_one=True):
 
     if level_one is True:
         # for the root level we generate a json machine
-        # representation.
-        generate_machine_listing(app, major_id, dst_path)
+        # representation, called "index.json"
+        jdata = generate_machine_listing(app, major_id, dst_path)
+        index_json_path = os.path.join(dst_path, 'index.json')
+        with open(index_json_path, 'w') as fd:
+            fd.write(jdata)
 
 def generate_all(app):
     # FIXME: this is just a short hack to get the
